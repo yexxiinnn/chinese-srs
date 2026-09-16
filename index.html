@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>汉字 — Chinese SRS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#111;--bg2:#1a1a1a;--bg3:#222;--border:#2a2a2a;--text:#ddd;--text2:#888;--text3:#555;--accent:#888;--green:#4a4;--red:#a44;--orange:#a84;--blue:#48a}
+body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+@media(min-width:600px){body{max-width:480px;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border)}}
+
+/* ═══ NAV ═══ */
+.nav{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:10}
+.nav-btn{flex:1;padding:12px 8px;font-size:11px;text-align:center;color:var(--text3);cursor:default;border-bottom:2px solid transparent;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.nav-btn.active{color:var(--text);border-bottom-color:var(--text)}
+
+/* ═══ PAGES ═══ */
+.page{display:none;padding:16px;padding-bottom:80px}
+.page.active{display:block}
+
+/* ═══ DASHBOARD ═══ */
+.dash-greeting{font-size:20px;font-weight:700;margin-bottom:4px}
+.dash-sub{font-size:12px;color:var(--text2);margin-bottom:20px}
+.dash-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px}
+.dash-stat{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 10px;text-align:center}
+.dash-stat .ds-num{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.dash-stat .ds-label{font-size:9px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.3px}
+.dash-stat.review .ds-num{color:var(--orange)}
+.dash-stat.new .ds-num{color:var(--green)}
+.dash-stat.streak .ds-num{color:var(--blue)}
+
+.dash-section{margin-bottom:16px}
+.dash-section h3{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px}
+
+.hsk-levels{display:flex;flex-direction:column;gap:6px}
+.hsk-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:5px}
+.hsk-row .hsk-badge{font-size:10px;font-weight:700;background:var(--bg3);padding:2px 6px;border-radius:3px;min-width:36px;text-align:center}
+.hsk-row .hsk-bar{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.hsk-row .hsk-fill{height:100%;background:var(--text3);border-radius:2px;transition:width .3s}
+.hsk-row .hsk-count{font-size:10px;color:var(--text3);min-width:50px;text-align:right}
+
+.start-btn{width:100%;padding:14px;font-size:14px;font-weight:600;border:none;border-radius:6px;cursor:default;transition:all .15s;font-family:inherit;margin-top:8px}
+.start-btn.review{background:var(--text);color:var(--bg)}
+.start-btn.new{background:var(--bg3);color:var(--text)}
+.start-btn.done{background:var(--bg2);color:var(--text3);border:1px solid var(--border)}
+
+/* ═══ REVIEW ═══ */
+.review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.review-progress{flex:1;height:3px;background:var(--bg3);border-radius:2px;margin:0 12px;overflow:hidden}
+.review-progress .rp-fill{height:100%;background:var(--text3);border-radius:2px;transition:width .3s}
+.review-count{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums}
+.review-close{font-size:18px;color:var(--text3);padding:4px 8px;cursor:default}
+
+.card-container{perspective:800px;margin-bottom:16px}
+.card{width:100%;min-height:220px;position:relative;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.4,.0,.2,1);cursor:default}
+.card.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:8px;border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.card-front{background:var(--bg2)}
+.card-back{background:var(--bg2);transform:rotateY(180deg)}
+.card-char{font-size:52px;font-weight:700;margin-bottom:8px;line-height:1.2}
+.card-pinyin{font-size:16px;color:var(--text2);margin-bottom:4px}
+.card-hsk{font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:2px;margin-top:8px}
+.card-meaning{font-size:20px;font-weight:600;margin-bottom:8px}
+.card-example{font-size:12px;color:var(--text2);text-align:center;line-height:1.6;max-width:280px}
+.card-hint{font-size:10px;color:var(--text3);margin-top:12px}
+
+.grade-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.grade-btn{padding:12px 4px;font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:5px;text-align:center;cursor:default;transition:all .12s;background:var(--bg2);color:var(--text2);font-family:inherit}
+.grade-btn:active{transform:scale(.96)}
+.grade-btn.again{border-color:var(--red);color:var(--red)}
+.grade-btn.hard{border-color:var(--orange);color:var(--orange)}
+.grade-btn.good{border-color:var(--green);color:var(--green)}
+.grade-btn.easy{border-color:var(--blue);color:var(--blue)}
+.grade-btn .gb-interval{font-size:9px;font-weight:400;color:var(--text3);margin-top:2px;display:block}
+
+/* ═══ BROWSE ═══ */
+.browse-search{width:100%;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:5px;font-size:13px;color:var(--text);outline:none;margin-bottom:10px;font-family:inherit}
+.browse-search:focus{border-color:var(--text3)}
+.browse-filters{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.browse-filter{font-size:10px;padding:3px 8px;border-radius:3px;background:var(--bg2);color:var(--text3);border:1px solid var(--border);cursor:default}
+.browse-filter.active{color:var(--text);border-color:var(--text3)}
+.browse-list{display:flex;flex-direction:column;gap:4px}
+.browse-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:4px}
+.browse-item .bi-char{font-size:16px;font-weight:600;min-width:60px}
+.browse-item .bi-pinyin{font-size:11px;color:var(--text2);min-width:60px}
+.browse-item .bi-meaning{font-size:11px;color:var(--text2);flex:1}
+.browse-item .bi-level{font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 4px;border-radius:2px}
+.browse-item .bi-status{font-size:9px;width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bi-status.due{background:var(--orange)}.bi-status.learned{background:var(--green)}.bi-status.unseen{background:var(--text3)}
+
+/* ═══ STATS ═══ */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.stats-card{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px}
+.stats-card .sc-val{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.stats-card .sc-label{font-size:9px;color:var(--text3);margin-top:2px;text-transform:uppercase}
+.heatmap{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:16px}
+.heatmap .hm-day{width:12px;height:12px;border-radius:2px;background:var(--bg3)}
+.heatmap .hm-day.l1{background:#333}.heatmap .hm-day.l2{background:#444}.heatmap .hm-day.l3{background:#666}.heatmap .hm-day.l4{background:#999}
+.forecast{margin-bottom:16px}
+.forecast-row{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px solid var(--border)}
+.forecast-row:last-child{border:none}
+.forecast-row .fr-day{color:var(--text2)}.forecast-row .fr-count{font-weight:600}
+
+/* ═══ COMPLETE ═══ */
+.complete{text-align:center;padding:40px 20px}
+.complete h2{font-size:20px;margin-bottom:6px}
+.complete p{font-size:12px;color:var(--text2);margin-bottom:20px}
+.complete-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px}
+.complete-stat{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px}
+.complete-stat .cs-val{font-size:18px;font-weight:700}
+.complete-stat .cs-label{font-size:9px;color:var(--text3);margin-top:2px}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('dash')">Today</button>
+  <button class="nav-btn" onclick="showPage('browse')">Words</button>
+  <button class="nav-btn" onclick="showPage('stats')">Stats</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dash">
+  <div class="dash-greeting" id="greeting">Good morning</div>
+  <div class="dash-sub" id="dash-sub">Let's review some words today</div>
+
+  <div class="dash-stats">
+    <div class="dash-stat review"><div class="ds-num" id="ds-review">0</div><div class="ds-label">Due</div></div>
+    <div class="dash-stat new"><div class="ds-num" id="ds-new">0</div><div class="ds-label">New</div></div>
+    <div class="dash-stat streak"><div class="ds-num" id="ds-streak">0</div><div class="ds-label">Day Streak</div></div>
+  </div>
+
+  <button class="start-btn review" id="btn-start-review" onclick="startReview()">Start Review</button>
+  <button class="start-btn new" id="btn-start-new" onclick="startNew()">Learn New Words</button>
+
+  <div class="dash-section" style="margin-top:20px">
+    <h3>Vocabulary Progress</h3>
+    <div class="hsk-levels" id="hsk-levels"></div>
+  </div>
+</div>
+
+<!-- REVIEW -->
+<div class="page" id="page-review">
+  <div class="review-header">
+    <span class="review-close" onclick="endReview()">✕</span>
+    <div class="review-progress"><div class="rp-fill" id="rp-fill"></div></div>
+    <span class="review-count" id="review-count">0/0</span>
+  </div>
+  <div class="card-container" onclick="flipCard()">
+    <div class="card" id="flashcard">
+      <div class="card-face card-front">
+        <div class="card-char" id="cf-char"></div>
+        <div class="card-pinyin" id="cf-pinyin"></div>
+        <div class="card-hsk" id="cf-hsk"></div>
+        <div class="card-hint">tap to reveal</div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-char" id="cb-char"></div>
+        <div class="card-pinyin" id="cb-pinyin"></div>
+        <div class="card-meaning" id="cb-meaning"></div>
+        <div class="card-example" id="cb-example"></div>
+      </div>
+    </div>
+  </div>
+  <div class="grade-btns" id="grade-btns" style="display:none">
+    <button class="grade-btn again" onclick="grade(0)">Again<span class="gb-interval" id="gi-again">1m</span></button>
+    <button class="grade-btn hard" onclick="grade(1)">Hard<span class="gb-interval" id="gi-hard">6m</span></button>
+    <button class="grade-btn good" onclick="grade(2)">Good<span class="gb-interval" id="gi-good">10m</span></button>
+    <button class="grade-btn easy" onclick="grade(3)">Easy<span class="gb-interval" id="gi-easy">4d</span></button>
+  </div>
+</div>
+
+<!-- COMPLETE -->
+<div class="page" id="page-complete">
+  <div class="complete">
+    <h2 id="complete-title">Session Complete</h2>
+    <p id="complete-sub">Great job! Come back later for more reviews.</p>
+    <div class="complete-stats">
+      <div class="complete-stat"><div class="cs-val" id="cs-reviewed">0</div><div class="cs-label">Reviewed</div></div>
+      <div class="complete-stat"><div class="cs-val" id="cs-correct">0</div><div class="cs-label">Correct</div></div>
+      <div class="complete-stat"><div class="cs-val" id="cs-time">0m</div><div class="cs-label">Time</div></div>
+    </div>
+    <button class="start-btn review" onclick="showPage('dash')">Back to Dashboard</button>
+  </div>
+</div>
+
+<!-- BROWSE -->
+<div class="page" id="page-browse">
+  <input class="browse-search" id="browse-search" placeholder="Search words..." oninput="filterWords()">
+  <div class="browse-filters" id="browse-filters">
+    <span class="browse-filter active" onclick="setFilter('all')">All</span>
+    <span class="browse-filter" onclick="setFilter(1)">HSK 1</span>
+    <span class="browse-filter" onclick="setFilter(2)">HSK 2</span>
+    <span class="browse-filter" onclick="setFilter(3)">HSK 3</span>
+    <span class="browse-filter" onclick="setFilter(4)">HSK 4</span>
+    <span class="browse-filter" onclick="setFilter(5)">HSK 5</span>
+    <span class="browse-filter" onclick="setFilter(6)">HSK 6</span>
+  </div>
+  <div class="browse-list" id="browse-list"></div>
+</div>
+
+<!-- STATS -->
+<div class="page" id="page-stats">
+  <div class="stats-grid">
+    <div class="stats-card"><div class="sc-val" id="st-total">0</div><div class="sc-label">Total Words</div></div>
+    <div class="stats-card"><div class="sc-val" id="st-learned">0</div><div class="sc-label">Learned</div></div>
+    <div class="stats-card"><div class="sc-val" id="st-reviews">0</div><div class="sc-label">Total Reviews</div></div>
+    <div class="stats-card"><div class="sc-val" id="st-accuracy">0%</div><div class="sc-label">Accuracy</div></div>
+  </div>
+  <h3 style="font-size:12px;color:var(--text2);margin-bottom:8px">Review Activity (30 days)</h3>
+  <div class="heatmap" id="heatmap"></div>
+  <h3 style="font-size:12px;color:var(--text2);margin-bottom:8px">Upcoming Reviews</h3>
+  <div class="forecast" id="forecast"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// VOCABULARY DATABASE (HSK 1-6)
+// ═══════════════════════════════════════
+const WORDS = [
+// HSK 1
+["你","nǐ","you",1,"你好！我是小明。"],
+["好","hǎo","good / well",1,"今天天气很好。"],
+["我","wǒ","I / me",1,"我是中国人。"],
+["是","shì","to be / is",1,"他是我的老师。"],
+["不","bù","not / no",1,"我不是学生。"],
+["一","yī","one",1,"我有一个姐姐。"],
+["了","le","(completed action)",1,"我吃了早饭。"],
+["在","zài","at / in / doing",1,"他在学校。"],
+["人","rén","person / people",1,"这里有很多人。"],
+["有","yǒu","to have / there is",1,"我有一本书。"],
+["这","zhè","this",1,"这是我的家。"],
+["中","zhōng","middle / China",1,"我是中国人。"],
+["大","dà","big / large",1,"这个房间很大。"],
+["来","lái","to come",1,"请来我家玩。"],
+["上","shàng","up / on / above",1,"书在桌子上。"],
+["个","gè","(measure word)",1,"我有一个问题。"],
+["国","guó","country / nation",1,"中国是一个大国。"],
+["到","dào","to arrive / to",1,"我到了北京。"],
+["说","shuō","to say / speak",1,"你会说中文吗？"],
+["们","men","(plural suffix)",1,"我们是好朋友。"],
+["为","wèi","for / because",1,"这是为你准备的。"],
+["子","zi","(noun suffix)",1,"桌子上有一个杯子。"],
+["和","hé","and / with",1,"我和他是同学。"],
+["你","nǐ","you",1,"你叫什么名字？"],
+["地","dì","ground / land",1,"地上有一只猫。"],
+["出","chū","to go out",1,"他出去了。"],
+["会","huì","can / will / meeting",1,"我会说中文。"],
+["也","yě","also / too",1,"我也是学生。"],
+["时","shí","time / hour",1,"现在几点了？"],
+["年","nián","year",1,"今年是2026年。"],
+["得","de","(complement marker)",1,"他跑得快。"],
+["就","jiù","then / just / only",1,"我马上就来。"],
+["那","nà","that",1,"那个人是谁？"],
+["要","yào","to want / need",1,"我要一杯水。"],
+["下","xià","down / below / next",1,"下午我们去公园。"],
+["以","yǐ","by / with / in order to",1,"以后再说吧。"],
+["生","shēng","life / to give birth",1,"祝你生日快乐！"],
+["自","zì","self / from",1,"我自己做。"],
+["家","jiā","home / family",1,"我的家在北京。"],
+["小","xiǎo","small / little",1,"这只猫很小。"],
+["学","xué","to study / learn",1,"我在学中文。"],
+["都","dōu","all / both",1,"我们都是中国人。"],
+["天","tiān","day / sky",1,"今天天气很好。"],
+["后","hòu","behind / after",1,"学校后面有一个公园。"],
+["能","néng","can / able to",1,"你能帮我吗？"],
+["开","kāi","to open / to drive",1,"请开门。"],
+["他","tā","he / him",1,"他是我的哥哥。"],
+["她","tā","she / her",1,"她是我的姐姐。"],
+["多","duō","many / much / how",1,"你多大了？"],
+["日","rì","day / sun / date",1,"今天是星期日。"],
+["月","yuè","month / moon",1,"一月是一年的第一个月。"],
+["看","kàn","to look / watch / read",1,"我在看书。"],
+["吃","chī","to eat",1,"我们吃饭吧。"],
+["喝","hē","to drink",1,"你想喝什么？"],
+["听","tīng","to listen",1,"我在听音乐。"],
+["写","xiě","to write",1,"请写你的名字。"],
+["读","dú","to read (aloud)",1,"请读这个课文。"],
+["做","zuò","to do / make",1,"你在做什么？"],
+["买","mǎi","to buy",1,"我去买东西。"],
+["去","qù","to go",1,"我去学校。"],
+["回","huí","to return / back",1,"我回家了。"],
+["住","zhù","to live / stay",1,"你住在哪里？"],
+["坐","zuò","to sit",1,"请坐。"],
+["站","zhàn","to stand / station",1,"请站起来。"],
+["走","zǒu","to walk / go",1,"我们走吧。"],
+["跑","pǎo","to run",1,"他跑得很快。"],
+["睡","shuì","to sleep",1,"我十点睡觉。"],
+["工作","gōngzuò","work / job",1,"他在北京工作。"],
+["老师","lǎoshī","teacher",1,"我的老师很好。"],
+["学生","xuéshēng","student",1,"我是大学生。"],
+["朋友","péngyǒu","friend",1,"他是我最好的朋友。"],
+["同学","tóngxué","classmate",1,"她是我的同学。"],
+["爸爸","bàba","father / dad",1,"我爸爸是医生。"],
+["妈妈","māma","mother / mom",1,"我妈妈在做饭。"],
+["哥哥","gēge","older brother",1,"我有一个哥哥。"],
+["姐姐","jiějie","older sister",1,"我姐姐在大学。"],
+["弟弟","dìdi","younger brother",1,"我弟弟今年十岁。"],
+["妹妹","mèimei","younger sister",1,"我妹妹很可爱。"],
+["水","shuǐ","water",1,"请给我一杯水。"],
+["茶","chá","tea",1,"你想喝茶吗？"],
+["饭","fàn","rice / meal",1,"我们吃饭吧。"],
+["菜","cài","vegetable / dish",1,"这个菜很好吃。"],
+["苹果","píngguǒ","apple",1,"我想吃苹果。"],
+["猫","māo","cat",1,"我有一只猫。"],
+["狗","gǒu","dog",1,"这只狗很可爱。"],
+["书","shū","book",1,"这本书很有意思。"],
+["电脑","diànnǎo","computer",1,"我在用电脑。"],
+["手机","shǒujī","mobile phone",1,"我的手机没电了。"],
+["钱","qián","money",1,"这个多少钱？"],
+["块","kuài","(yuan) / piece",1,"这个五块钱。"],
+["东西","dōngxi","thing / stuff",1,"你买了什么东西？"],
+["今天","jīntiān","today",1,"今天星期几？"],
+["明天","míngtiān","tomorrow",1,"明天见！"],
+["昨天","zuótiān","yesterday",1,"昨天下雨了。"],
+["现在","xiànzài","now",1,"现在几点了？"],
+["时候","shíhòu","time / when",1,"你什么时候来？"],
+["点","diǎn","o'clock / dot / order",1,"现在三点半。"],
+["分钟","fēnzhōng","minute",1,"请等五分钟。"],
+["前面","qiánmiàn","in front of",1,"学校前面有一个商店。"],
+["后面","hòumiàn","behind / back",1,"银行在后面。"],
+["里面","lǐmiàn","inside",1,"猫在里面。"],
+["外面","wàimiàn","outside",1,"外面很冷。"],
+["上面","shàngmiàn","above / on top",1,"书在上面。"],
+["下面","xiàmiàn","below / under",1,"猫在下面。"],
+["左","zuǒ","left",1,"往左走。"],
+["右","yòu","right",1,"银行在右边。"],
+["中国","Zhōngguó","China",1,"我想去中国。"],
+["北京","Běijīng","Beijing",1,"北京是中国的首都。"],
+["中文","Zhōngwén","Chinese (language)",1,"你在学中文吗？"],
+["英语","Yīngyǔ","English",1,"他会说英语。"],
+["名字","míngzi","name",1,"你叫什么名字？"],
+["岁","suì","years old",1,"我二十岁。"],
+["几","jǐ","how many / several",1,"你有几个？"],
+["多少","duōshǎo","how many / how much",1,"这个多少钱？"],
+["怎么","zěnme","how / why",1,"怎么去学校？"],
+["什么","shénme","what",1,"你在吃什么？"],
+["哪","nǎ","which / where",1,"你是哪国人？"],
+["谁","shéi","who",1,"他是谁？"],
+["谢谢","xièxie","thank you",1,"谢谢你的帮助。"],
+["对不起","duìbùqǐ","sorry",1,"对不起，我迟到了。"],
+["没关系","méi guānxi","it doesn't matter",1,"没关系，别担心。"],
+["再见","zàijiàn","goodbye",1,"明天再见！"],
+["喜欢","xǐhuān","to like",1,"我喜欢吃中国菜。"],
+["想","xiǎng","to think / want / miss",1,"我想回家。"],
+["爱","ài","to love",1,"我爱我家。"],
+["认识","rènshi","to know (a person)",1,"很高兴认识你。"],
+["知道","zhīdào","to know (a fact)",1,"我不知道。"],
+["觉得","juéde","to feel / think",1,"我觉得很好。"],
+["希望","xīwàng","to hope / wish",1,"我希望明天不下雨。"],
+["高兴","gāoxìng","happy / glad",1,"认识你很高兴。"],
+["漂亮","piàoliang","beautiful / pretty",1,"她很漂亮。"],
+["冷","lěng","cold",1,"今天很冷。"],
+["热","rè","hot",1,"夏天很热。"],
+["累","lèi","tired",1,"我今天很累。"],
+["忙","máng","busy",1,"你最近忙吗？"],
+["难","nán","difficult",1,"中文不难。"],
+["容易","róngyì","easy",1,"这个很容易。"],
+["快","kuài","fast / quick / soon",1,"他跑得很快。"],
+["慢","màn","slow",1,"请说慢一点。"],
+["新","xīn","new",1,"这是新书。"],
+["旧","jiù","old (things)",1,"这是旧手机。"],
+["长","cháng","long",1,"这条路很长。"],
+["高","gāo","tall / high",1,"他很高。"],
+["白","bái","white",1,"我穿白衣服。"],
+["黑","hēi","black",1,"他有一辆黑车。"],
+["红","hóng","red",1,"她穿红裙子。"],
+["医院","yīyuàn","hospital",1,"医院在前面。"],
+["医生","yīshēng","doctor",1,"他是医生。"],
+["商店","shāngdiàn","shop / store",1,"我去商店买东西。"],
+["学校","xuéxiào","school",1,"学校很大。"],
+["饭店","fàndiàn","restaurant / hotel",1,"这个饭店很好。"],
+["飞机","fēijī","airplane",1,"我坐飞机去北京。"],
+["出租车","chūzūchē","taxi",1,"我们坐出租车吧。"],
+["火车","huǒchē","train",1,"他坐火车去上海。"],
+["天气","tiānqì","weather",1,"今天天气怎么样？"],
+["下雨","xià yǔ","to rain",1,"外面下雨了。"],
+
+// HSK 2
+["因为","yīnwèi","because",2,"因为下雨，我没去。"],
+["所以","suǒyǐ","so / therefore",2,"我病了，所以没来。"],
+["但是","dànshì","but / however",2,"我想去，但是没时间。"],
+["虽然","suīrán","although",2,"虽然很累，但很开心。"],
+["如果","rúguǒ","if",2,"如果下雨，我就不去了。"],
+["已经","yǐjīng","already",2,"我已经吃过了。"],
+["还是","háishì","or / still",2,"你喝茶还是咖啡？"],
+["或者","huòzhě","or (statement)",2,"我喝茶或者咖啡都可以。"],
+["一边","yìbiān","while / at the same time",2,"他一边吃饭一边看电视。"],
+["以后","yǐhòu","after / later",2,"下课以后我们去吃饭。"],
+["以前","yǐqián","before",2,"以前我住在北京。"],
+["从","cóng","from",2,"我从美国来。"],
+["向","xiàng","toward / to face",2,"向前走。"],
+["对","duì","correct / toward",2,"你说得对。"],
+["过","guò","(experiential)",2,"我去过中国。"],
+["着","zhe","(continuous state)",2,"门开着呢。"],
+["把","bǎ","(object marker)",2,"请把门关上。"],
+["被","bèi","(passive marker)",2,"书被他拿走了。"],
+["给","gěi","to give / for",2,"给我一杯水。"],
+["让","ràng","to let / allow",2,"让我想想。"],
+["比","bǐ","to compare / than",2,"他比我高。"],
+["最","zuì","most / -est",2,"这是最好的。"],
+["更","gèng","more / even more",2,"今天更冷了。"],
+["非常","fēicháng","very / extremely",2,"我非常喜欢。"],
+["真","zhēn","really / truly",2,"真的很好！"],
+["可能","kěnéng","maybe / possible",2,"他可能不来了。"],
+["一定","yídìng","certainly / must",2,"你一定要来。"],
+["别","bié","don't",2,"别说话。"],
+["还没","hái méi","not yet",2,"我还没吃饭。"],
+["每","měi","every / each",2,"我每天学中文。"],
+["两","liǎng","two (amount)",2,"我有两个孩子。"],
+["第一","dì-yī","first",2,"他是第一名。"],
+["次","cì","time (occurrence)",2,"我去过两次中国。"],
+["件","jiàn","(measure word for clothes/events)",2,"我买了一件衣服。"],
+["张","zhāng","(measure word for flat objects)",2,"给我一张纸。"],
+["本","běn","(measure word for books)",2,"这本书多少钱？"],
+["双","shuāng","pair",2,"我买了一双鞋。"],
+["身体","shēntǐ","body / health",2,"你身体好吗？"],
+["眼睛","yǎnjīng","eye",2,"她的眼睛很大。"],
+["脸","liǎn","face",2,"请洗脸。"],
+["手","shǒu","hand",2,"请洗手。"],
+["脚","jiǎo","foot",2,"我的脚疼。"],
+["头","tóu","head",2,"我头疼。"],
+["丈夫","zhàngfu","husband",2,"她的丈夫是老师。"],
+["妻子","qīzi","wife",2,"他的妻子很漂亮。"],
+["孩子","háizi","child / children",2,"他们有两个孩子。"],
+["女儿","nǚ'ér","daughter",2,"我女儿五岁。"],
+["儿子","érzi","son",2,"他儿子在上大学。"],
+["哥哥","gēge","older brother",2,"我哥哥在北京工作。"],
+["房间","fángjiān","room",2,"这个房间很大。"],
+["门","mén","door / gate",2,"请关门。"],
+["窗","chuāng","window",2,"请开窗。"],
+["桌子","zhuōzi","table / desk",2,"书在桌子上。"],
+["椅子","yǐzi","chair",2,"请坐这把椅子。"],
+["床","chuáng","bed",2,"我想睡觉，床在哪里？"],
+["电视","diànshì","television",2,"我在看电视。"],
+["电影","diànyǐng","movie / film",2,"我们去看电影吧。"],
+["音乐","yīnyuè","music",2,"我喜欢听音乐。"],
+["歌","gē","song",2,"这首歌很好听。"],
+["颜色","yánsè","color",2,"你喜欢什么颜色？"],
+["蓝","lán","blue",2,"天是蓝色的。"],
+["绿","lǜ","green",2,"草是绿色的。"],
+["黄","huáng","yellow",2,"她穿黄色衣服。"],
+["花","huā","flower",2,"这朵花很漂亮。"],
+["树","shù","tree",2,"这里有很多树。"],
+["路","lù","road / path",2,"这条路很长。"],
+["河","hé","river",2,"河里有鱼。"],
+["山","shān","mountain / hill",2,"这座山很高。"],
+["海","hǎi","sea / ocean",2,"我想去看海。"],
+["鱼","yú","fish",2,"我喜欢吃鱼。"],
+["鸟","niǎo","bird",2,"树上有一只鸟。"],
+["鸡蛋","jīdàn","egg",2,"早餐吃鸡蛋。"],
+["牛奶","niúnǎi","milk",2,"我每天早上喝牛奶。"],
+["米饭","mǐfàn","cooked rice",2,"中国人爱吃米饭。"],
+["面条","miàntiáo","noodles",2,"我想吃面条。"],
+["水果","shuǐguǒ","fruit",2,"多吃水果对身体好。"],
+["香蕉","xiāngjiāo","banana",2,"给我一根香蕉。"],
+["西瓜","xīguā","watermelon",2,"夏天吃西瓜很凉快。"],
+["咖啡","kāfēi","coffee",2,"你想喝咖啡吗？"],
+["啤酒","píjiǔ","beer",2,"他喜欢喝啤酒。"],
+["鞋","xié","shoes",2,"我买了一双新鞋。"],
+["衣服","yīfu","clothes / clothing",2,"这件衣服很好看。"],
+["裤子","kùzi","pants / trousers",2,"他穿黑裤子。"],
+["帽子","màozi","hat / cap",2,"外面冷，戴帽子吧。"],
+["公司","gōngsī","company",2,"他在一家大公司工作。"],
+["银行","yínháng","bank",2,"银行在哪里？"],
+["机场","jīchǎng","airport",2,"我去机场接你。"],
+["公共汽车","gōnggòng qìchē","bus",2,"我坐公共汽车去。"],
+["自行车","zìxíngchē","bicycle",2,"我骑自行车上班。"],
+["船","chuán","boat / ship",2,"我们坐船去。"],
+["地图","dìtú","map",2,"你有地图吗？"],
+["城市","chéngshì","city",2,"北京是一个大城市。"],
+["国家","guójiā","country / nation",2,"你去过几个国家？"],
+["春","chūn","spring",2,"春天很暖和。"],
+["夏","xià","summer",2,"夏天很热。"],
+["秋","qiū","autumn / fall",2,"秋天很美。"],
+["冬","dōng","winter",2,"冬天很冷。"],
+["星期","xīngqī","week",2,"今天星期几？"],
+["小时","xiǎoshí","hour",2,"我学了一个小时。"],
+["刻","kè","quarter (hour) / carve",2,"现在三点一刻。"],
+["晚","wǎn","late / evening / night",2,"晚安！"],
+["早","zǎo","early / morning",2,"早上好！"],
+["起床","qǐchuáng","to get up",2,"我每天七点起床。"],
+["上班","shàngbān","to go to work",2,"他八点上班。"],
+["下课","xiàkè","to finish class",2,"下课以后我们吃饭。"],
+["考试","kǎoshì","exam / test",2,"明天有考试。"],
+["问题","wèntí","question / problem",2,"我有一个问题。"],
+["意思","yìsi","meaning",2,"这个词什么意思？"],
+["字","zì","character / word",2,"这个字怎么写？"],
+["句子","jùzi","sentence",2,"请读这个句子。"],
+["课文","kèwén","textbook lesson / text",2,"今天的课文很难。"],
+["练习","liànxí","to practice / exercise",2,"我每天练习中文。"],
+["复习","fùxí","to review",2,"考试前要复习。"],
+["作业","zuòyè","homework",2,"你做作业了吗？"],
+["帮助","bāngzhù","to help / help",2,"谢谢你帮助我。"],
+["准备","zhǔnbèi","to prepare",2,"我在准备考试。"],
+["开始","kāishǐ","to begin / start",2,"我们开始吧。"],
+["完","wán","to finish / complete",2,"我做完了。"],
+["休息","xiūxi","to rest",2,"我们休息一下吧。"],
+["运动","yùndòng","exercise / sports",2,"我每天运动。"],
+["游泳","yóuyǒng","to swim",2,"夏天我想游泳。"],
+["打球","dǎ qiú","to play ball",2,"我们一起去打球吧。"],
+["踢足球","tī zúqiú","to play soccer",2,"他喜欢踢足球。"],
+["打篮球","dǎ lánqiú","to play basketball",2,"周末我们打篮球。"],
+["旅游","lǚyóu","to travel / tourism",2,"我想去中国旅游。"],
+["护照","hùzhào","passport",2,"请给我看你的护照。"],
+["行李","xíngli","luggage",2,"我的行李在哪里？"],
+
+// HSK 3
+["环境","huánjìng","environment",3,"这里的环境很好。"],
+["经验","jīngyàn","experience",3,"他有很多经验。"],
+["机会","jīhuì","opportunity / chance",3,"这是一个好机会。"],
+["办法","bànfǎ","method / way",3,"你有什么办法？"],
+["情况","qíngkuàng","situation / condition",3,"情况不太好。"],
+["关系","guānxì","relationship / connection",3,"他们关系很好。"],
+["条件","tiáojiàn","condition / requirement",3,"条件很好。"],
+["原因","yuányīn","reason / cause",3,"什么原因？"],
+["结果","jiéguǒ","result / outcome",3,"结果很好。"],
+["新闻","xīnwén","news",3,"你看新闻了吗？"],
+["历史","lìshǐ","history",3,"我对历史很感兴趣。"],
+["文化","wénhuà","culture",3,"中国文化很有意思。"],
+["经济","jīngjì","economy",3,"中国经济发展很快。"],
+["社会","shèhuì","society",3,"社会在变化。"],
+["教育","jiàoyù","education",3,"教育很重要。"],
+["科学","kēxué","science",3,"科学技术很重要。"],
+["技术","jìshù","technology / skill",3,"他的技术很好。"],
+["网络","wǎngluò","internet / network",3,"我每天都上网。"],
+["网站","wǎngzhàn","website",3,"这个网站很好用。"],
+["信息","xìnxī","information / message",3,"我收到一条信息。"],
+["世界","shìjiè","world",3,"世界很大。"],
+["地球","dìqiú","earth / globe",3,"我们要保护地球。"],
+["太阳","tàiyáng","sun",3,"今天太阳很大。"],
+["月亮","yuèliàng","moon",3,"今晚月亮很圆。"],
+["星星","xīngxing","star",3,"天上有很多星星。"],
+["动物","dòngwù","animal",3,"我喜欢动物。"],
+["植物","zhíwù","plant",3,"这里有很多植物。"],
+["马","mǎ","horse",3,"他会骑马。"],
+["老虎","lǎohǔ","tiger",3,"老虎很危险。"],
+["熊猫","xióngmāo","panda",3,"熊猫是中国的国宝。"],
+["超市","chāoshì","supermarket",3,"我去超市买东西。"],
+["图书馆","túshūguǎn","library",3,"我在图书馆学习。"],
+["博物馆","bówùguǎn","museum",3,"周末我们去博物馆。"],
+["公园","gōngyuán","park",3,"公园里有很多树。"],
+["地铁","dìtiě","subway / metro",3,"我坐地铁上班。"],
+["交通","jiāotōng","traffic / transportation",3,"北京交通很方便。"],
+["安全","ānquán","safe / safety",3,"注意安全！"],
+["危险","wēixiǎn","dangerous",3,"这里很危险。"],
+["干净","gānjìng","clean",3,"房间很干净。"],
+["简单","jiǎndān","simple / easy",3,"这个问题很简单。"],
+["复杂","fùzá","complex / complicated",3,"这个问题太复杂了。"],
+["重要","zhòngyào","important",3,"这很重要。"],
+["特别","tèbié","special / especially",3,"今天特别冷。"],
+["一般","yìbān","general / average",3,"一般般吧。"],
+["正常","zhèngcháng","normal",3,"一切正常。"],
+["奇怪","qíguài","strange / weird",3,"真奇怪。"],
+["清楚","qīngchǔ","clear",3,"你说得很清楚。"],
+["认真","rènzhēn","serious / earnest",3,"他学习很认真。"],
+["努力","nǔlì","hardworking / effort",3,"他很努力。"],
+["成功","chénggōng","success / succeed",3,"祝你成功！"],
+["失败","shībài","failure / fail",3,"不要怕失败。"],
+["改变","gǎibiàn","to change",3,"世界在改变。"],
+["发展","fāzhǎn","to develop / development",3,"城市发展很快。"],
+["参加","cānjiā","to participate / join",3,"我想参加这个活动。"],
+["选择","xuǎnzé","to choose / choice",3,"你选择哪个？"],
+["决定","juédìng","to decide / decision",3,"我决定了。"],
+["同意","tóngyì","to agree",3,"我同意你的看法。"],
+["反对","fǎnduì","to oppose / against",3,"我反对这个计划。"],
+["担心","dānxīn","to worry",3,"别担心。"],
+["相信","xiāngxìn","to believe",3,"我相信你。"],
+["理解","lǐjiě","to understand",3,"我理解你的意思。"],
+["解释","jiěshì","to explain",3,"请解释一下。"],
+["讨论","tǎolùn","to discuss",3,"我们讨论一下。"],
+["介绍","jièshào","to introduce",3,"我来介绍一下。"],
+["表示","biǎoshì","to express / indicate",3,"他表示同意。"],
+["影响","yǐngxiǎng","to influence / influence",3,"这对我有很大影响。"],
+["保护","bǎohù","to protect",3,"我们要保护环境。"],
+["提高","tígāo","to improve / raise",3,"我想提高中文水平。"],
+["增加","zēngjiā","to increase / add",3,"增加了很多人。"],
+["减少","jiǎnshǎo","to decrease / reduce",3,"减少浪费。"],
+["保持","bǎochí","to maintain / keep",3,"保持安静。"],
+["完成","wánchéng","to complete / finish",3,"任务完成了。"],
+["接受","jiēshòu","to accept",3,"我接受你的建议。"],
+["拒绝","jùjué","to refuse / reject",3,"他拒绝了。"],
+["要求","yāoqiú","to require / request",3,"老板要求很高。"],
+["建议","jiànyì","to suggest / suggestion",3,"你有什么建议？"],
+["回答","huídá","to answer / answer",3,"请回答我的问题。"],
+["发现","fāxiàn","to discover / find",3,"我发现了一个问题。"],
+["发明","fāmíng","to invent / invention",3,"中国人发明了纸。"],
+["表演","biǎoyǎn","to perform / performance",3,"他的表演很精彩。"],
+["比赛","bǐsài","competition / match",3,"今天的比赛谁赢了？"],
+["赢","yíng","to win",3,"我们赢了！"],
+["输","shū","to lose",3,"他们输了。"],
+["继续","jìxù","to continue",3,"请继续。"],
+["放弃","fàngqì","to give up",3,"不要放弃！"],
+["坚持","jiānchí","to persist / insist",3,"坚持下去。"],
+["习惯","xíguàn","habit / to be used to",3,"我已经习惯了。"],
+["感兴趣","gǎn xìngqù","to be interested in",3,"我对中文感兴趣。"],
+["厨房","chúfáng","kitchen",3,"妈妈在厨房做饭。"],
+["客厅","kètīng","living room",3,"我们在客厅看电视。"],
+["卧室","wòshì","bedroom",3,"卧室在二楼。"],
+["卫生间","wèishēngjiān","bathroom / restroom",3,"卫生间在哪里？"],
+["电梯","diàntī","elevator",3,"坐电梯上去。"],
+["楼","lóu","building / floor",3,"我住在三楼。"],
+["邻居","línjū","neighbor",3,"我的邻居很好。"],
+["客人","kèrén","guest / visitor",3,"今天有客人来。"],
+["礼物","lǐwù","gift / present",3,"这是给你的礼物。"],
+["生日","shēngrì","birthday",3,"祝你生日快乐！"],
+["节日","jiérì","festival / holiday",3,"春节是中国最重要的节日。"],
+["春节","Chūnjié","Spring Festival / Chinese New Year",3,"春节的时候吃饺子。"],
+["饺子","jiǎozi","dumplings",3,"我最喜欢吃饺子。"],
+["菜单","càidān","menu",3,"请给我菜单。"],
+["饮料","yǐnliào","beverage / drink",3,"你想喝什么饮料？"],
+["甜","tián","sweet",3,"这个很甜。"],
+["咸","xián","salty",3,"菜太咸了。"],
+["辣","là","spicy / hot",3,"你喜欢吃辣的吗？"],
+["酸","suān","sour",3,"这个橙子有点酸。"],
+["新鲜","xīnxiān","fresh",3,"水果很新鲜。"],
+["味道","wèidào","taste / flavor",3,"味道很好。"],
+["感冒","gǎnmào","cold (illness) / to catch cold",3,"我感冒了。"],
+["发烧","fāshāo","to have a fever",3,"他发烧了。"],
+["疼","téng","pain / ache",3,"我头疼。"],
+["药","yào","medicine",3,"你吃药了吗？"],
+["健康","jiànkāng","health / healthy",3,"祝你健康！"],
+["瘦","shòu","thin / lean",3,"他最近瘦了。"],
+["胖","pàng","fat / chubby",3,"我胖了。"],
+["锻炼","duànliàn","to exercise / work out",3,"我每天锻炼身体。"],
+["成绩","chéngjì","grade / score / achievement",3,"他的成绩很好。"],
+["知识","zhīshi","knowledge",3,"知识就是力量。"],
+["数学","shùxué","mathematics",3,"我数学不好。"],
+["科学","kēxué","science",3,"他学科学。"],
+["语言","yǔyán","language",3,"你会说几种语言？"],
+["翻译","fānyì","to translate / translator",3,"请帮我翻译一下。"],
+["字典","zìdiǎn","dictionary",3,"我查一下字典。"],
+["句子","jùzi","sentence",3,"请读这个句子。"],
+["语法","yǔfǎ","grammar",3,"中文语法很有意思。"],
+["发音","fāyīn","pronunciation",3,"他的发音很标准。"],
+["声调","shēngdiào","tone (in Chinese)",3,"中文有四个声调。"],
+["铅笔","qiānbǐ","pencil",3,"给我一支铅笔。"],
+["橡皮","xiàngpí","eraser",3,"你有橡皮吗？"],
+["尺子","chǐzi","ruler",3,"用尺子量一下。"],
+["黑板","hēibǎn","blackboard",3,"请看黑板。"],
+
+// HSK 4
+["态度","tàidù","attitude",4,"他的态度很好。"],
+["印象","yìnxiàng","impression",4,"我对他的印象很好。"],
+["感受","gǎnshòu","feeling / to feel",4,"你有什么感受？"],
+["心情","xīnqíng","mood",4,"我今天心情很好。"],
+["感情","gǎnqíng","emotion / feelings",4,"他们感情很好。"],
+["精神","jīngshén","spirit / energy",4,"你今天精神怎么样？"],
+["压力","yālì","pressure / stress",4,"工作压力很大。"],
+["责任","zérèn","responsibility",4,"这是你的责任。"],
+["权利","quánlì","right (legal)",4,"这是你的权利。"],
+["义务","yìwù","duty / obligation",4,"这是我们的义务。"],
+["标准","biāozhǔn","standard",4,"你的标准太高了。"],
+["方法","fāngfǎ","method / approach",4,"这个方法很好。"],
+["效果","xiàoguǒ","effect / result",4,"效果很明显。"],
+["效率","xiàolǜ","efficiency",4,"提高效率。"],
+["计划","jìhuà","plan / to plan",4,"你有什么计划？"],
+["目标","mùbiāo","goal / target",4,"我的目标是学好中文。"],
+["任务","rènwu","task / mission",4,"任务完成了。"],
+["项目","xiàngmù","project / item",4,"这个项目很重要。"],
+["资金","zījīn","funds / capital",4,"资金不够。"],
+["利润","lìrùn","profit",4,"今年的利润很高。"],
+["市场","shìchǎng","market",4,"市场竞争很激烈。"],
+["竞争","jìngzhēng","competition / to compete",4,"竞争越来越激烈。"],
+["合作","hézuò","cooperation / to cooperate",4,"我们合作很愉快。"],
+["交流","jiāoliú","exchange / to communicate",4,"多交流有好处。"],
+["沟通","gōutōng","to communicate",4,"沟通很重要。"],
+["表达","biǎodá","to express",4,"他善于表达。"],
+["描述","miáoshù","to describe",4,"请描述一下。"],
+["分析","fēnxī","to analyze",4,"我们来分析一下。"],
+["研究","yánjiū","to research / research",4,"他在做研究。"],
+["调查","diàochá","to investigate / survey",4,"我们做了一个调查。"],
+["报告","bàogào","report",4,"请写一份报告。"],
+["总结","zǒngjié","to summarize / summary",4,"请总结一下。"],
+["观点","guāndiǎn","viewpoint / opinion",4,"你的观点是什么？"],
+["角度","jiǎodù","angle / perspective",4,"从另一个角度看。"],
+["方面","fāngmiàn","aspect / side",4,"各方面都很好。"],
+["领域","lǐngyù","field / domain",4,"他是这个领域的专家。"],
+["过程","guòchéng","process",4,"过程比结果重要。"],
+["阶段","jiēduàn","stage / phase",4,"这是第一阶段。"],
+["步骤","bùzhòu","step / procedure",4,"请按照步骤来。"],
+["系统","xìtǒng","system",4,"这个系统很好用。"],
+["软件","ruǎnjiàn","software",4,"这个软件免费。"],
+["硬件","yìngjiàn","hardware",4,"硬件需要更新。"],
+["数据","shùjù","data",4,"数据分析很重要。"],
+["材料","cáiliào","material",4,"请准备材料。"],
+["工具","gōngjù","tool",4,"需要什么工具？"],
+["设备","shèbèi","equipment / device",4,"设备很先进。"],
+["机器","jīqì","machine",4,"机器坏了。"],
+["产品","chǎnpǐn","product",4,"产品质量很好。"],
+["质量","zhìliàng","quality",4,"质量很重要。"],
+["价格","jiàgé","price",4,"价格合理。"],
+["优惠","yōuhuì","discount / preferential",4,"今天有优惠。"],
+["打折","dǎzhé","to give a discount",4,"这个打几折？"],
+["退款","tuìkuǎn","refund",4,"我想退款。"],
+["快递","kuàidì","express delivery",4,"快递到了。"],
+["地址","dìzhǐ","address",4,"请告诉我你的地址。"],
+["联系","liánxì","to contact",4,"请跟我联系。"],
+["电话","diànhuà","telephone / phone call",4,"给我打电话。"],
+["短信","duǎnxìn","text message / SMS",4,"我给你发短信。"],
+["邮件","yóujiàn","email / mail",4,"我发了一封邮件。"],
+["密码","mìmǎ","password",4,"请设置密码。"],
+["账号","zhànghào","account",4,"我的账号登不上。"],
+["下载","xiàzǎi","to download",4,"请下载这个App。"],
+["安装","ānzhuāng","to install",4,"安装好了吗？"],
+["更新","gēngxīn","to update",4,"请更新软件。"],
+["搜索","sōusuǒ","to search",4,"搜索一下。"],
+["点击","diǎnjī","to click",4,"点击这里。"],
+["照片","zhàopiàn","photo / picture",4,"给我看照片。"],
+["视频","shìpín","video",4,"这个视频很有趣。"],
+["聊天","liáotiān","to chat",4,"我们在聊天。"],
+["社交","shèjiāo","social / socializing",4,"他社交能力很强。"],
+["性格","xìnggé","personality / character",4,"她性格很好。"],
+["优点","yōudiǎn","advantage / strength",4,"每个人都有自己的优点。"],
+["缺点","quēdiǎn","shortcoming / weakness",4,"他最大的缺点是什么？"],
+["诚实","chéngshí","honest",4,"他很诚实。"],
+["谦虚","qiānxū","modest / humble",4,"他太谦虚了。"],
+["骄傲","jiāo'ào","proud / arrogant",4,"我为你骄傲。"],
+["幽默","yōumò","humor / humorous",4,"他很幽默。"],
+["浪漫","làngmàn","romantic",4,"这个地方很浪漫。"],
+["感动","gǎndòng","to be moved / touched",4,"这个故事让我很感动。"],
+["失望","shīwàng","disappointed",4,"我有点失望。"],
+["后悔","hòuhuǐ","to regret",4,"我不后悔。"],
+["羡慕","xiànmù","to envy / admire",4,"我很羡慕你。"],
+["嫉妒","jídù","to be jealous",4,"不要嫉妒别人。"],
+["支持","zhīchí","to support",4,"我支持你。"],
+["鼓励","gǔlì","to encourage",4,"老师鼓励我们。"],
+["批评","pīpíng","to criticize / criticism",4,"不要批评他。"],
+["表扬","biǎoyáng","to praise",4,"老师表扬了我。"],
+["道歉","dàoqiàn","to apologize",4,"我向你道歉。"],
+["原谅","yuánliàng","to forgive",4,"请原谅我。"],
+["信任","xìnrèn","to trust / trust",4,"我信任你。"],
+["怀疑","huáiyí","to doubt / suspect",4,"我有点怀疑。"],
+["证明","zhèngmíng","to prove",4,"请证明你的观点。"],
+["判断","pànduàn","to judge / judgment",4,"你的判断是对的。"],
+["考虑","kǎolǜ","to consider",4,"让我考虑一下。"],
+["想象","xiǎngxiàng","to imagine",4,"你想象一下。"],
+["创造","chuàngzào","to create",4,"他很有创造力。"],
+["设计","shèjì","to design / design",4,"这个设计很好。"],
+["建立","jiànlì","to establish / build",4,"建立新的公司。"],
+["组织","zǔzhī","to organize / organization",4,"这个组织很好。"],
+["管理","guǎnlǐ","to manage / management",4,"他管理得很好。"],
+["领导","lǐngdǎo","leader / to lead",4,"他是一个好领导。"],
+["员工","yuángōng","employee / staff",4,"公司有很多员工。"],
+["工资","gōngzī","salary / wages",4,"工资很高。"],
+["奖金","jiǎngjīn","bonus",4,"年底有奖金。"],
+["面试","miànshì","interview",4,"明天有面试。"],
+["辞职","cízhí","to resign / quit",4,"他想辞职。"],
+["退休","tuìxiū","to retire / retirement",4,"他明年退休。"],
+
+// HSK 5
+["现象","xiànxiàng","phenomenon",5,"这是一种社会现象。"],
+["本质","běnzhì","essence / nature",5,"看问题要看本质。"],
+["概念","gàiniàn","concept",5,"这是一个新概念。"],
+["理论","lǐlùn","theory",5,"理论和实践要结合。"],
+["原则","yuánzé","principle",5,"这是我的原则。"],
+["价值观","jiàzhíguān","values",5,"每个人价值观不同。"],
+["意识","yìshí","consciousness / awareness",5,"要有安全意识。"],
+["思维","sīwéi","thinking / thought",5,"他的思维方式很独特。"],
+["逻辑","luójí","logic",5,"你的逻辑很清楚。"],
+["智慧","zhìhuì","wisdom",5,"他很有智慧。"],
+["灵感","línggǎn","inspiration",5,"我突然有了灵感。"],
+["传统","chuántǒng","tradition / traditional",5,"这是中国传统。"],
+["现代","xiàndài","modern",5,"现代生活很方便。"],
+["文明","wénmíng","civilization / civilized",5,"中华文明历史悠久。"],
+["艺术","yìshù","art",5,"她很有艺术天赋。"],
+["哲学","zhéxué","philosophy",5,"他学哲学。"],
+["宗教","zōngjiào","religion",5,"不同宗教有不同信仰。"],
+["政治","zhèngzhì","politics / political",5,"政治很复杂。"],
+["法律","fǎlǜ","law",5,"要遵守法律。"],
+["制度","zhìdù","system / institution",5,"这个制度需要改革。"],
+["改革","gǎigé","reform / to reform",5,"改革开放很重要。"],
+["革命","gémìng","revolution",5,"这是一场技术革命。"],
+["战争","zhànzhēng","war",5,"没有人想要战争。"],
+["和平","hépíng","peace",5,"和平最重要。"],
+["自由","zìyóu","freedom / free",5,"自由很珍贵。"],
+["民主","mínzhǔ","democracy / democratic",5,"民主制度。"],
+["公平","gōngpíng","fair / just",5,"这不公平。"],
+["正义","zhèngyì","justice",5,"追求正义。"],
+["道德","dàodé","morality / ethics",5,"道德很重要。"],
+["素质","sùzhì","quality (of a person)",5,"提高个人素质。"],
+["能力","nénglì","ability / capability",5,"他的能力很强。"],
+["潜力","qiánlì","potential",5,"他很有潜力。"],
+["才华","cáihuá","talent / gift",5,"她很有才华。"],
+["性格","xìnggé","personality",5,"性格决定命运。"],
+["命运","mìngyùn","destiny / fate",5,"命运掌握在自己手中。"],
+["幸福","xìngfú","happiness / happy",5,"祝你幸福！"],
+["痛苦","tòngkǔ","pain / suffering",5,"他经历了很大的痛苦。"],
+["快乐","kuàilè","happy / joyful",5,"祝你快乐！"],
+["悲伤","bēishāng","sad / sorrowful",5,"这首歌很悲伤。"],
+["恐惧","kǒngjù","fear",5,"克服恐惧。"],
+["愤怒","fènnù","anger / angry",5,"他很愤怒。"],
+["孤独","gūdú","lonely",5,"他感到孤独。"],
+["寂寞","jìmò","lonely (emotional)",5,"一个人的时候会寂寞。"],
+["满足","mǎnzú","satisfied / to satisfy",5,"我很满足。"],
+["追求","zhuīqiú","to pursue",5,"追求自己的梦想。"],
+["理想","lǐxiǎng","ideal / dream",5,"你的理想是什么？"],
+["现实","xiànshí","reality / realistic",5,"现实很残酷。"],
+["幻想","huànxiǎng","fantasy / illusion",5,"这只是幻想。"],
+["矛盾","máodùn","contradiction / conflict",5,"他们之间有矛盾。"],
+["平衡","pínghéng","balance / to balance",5,"工作和生活要平衡。"],
+["和谐","héxié","harmony / harmonious",5,"社会和谐很重要。"],
+["冲突","chōngtū","conflict / clash",5,"避免冲突。"],
+["危机","wēijī","crisis",5,"经济危机。"],
+["挑战","tiǎozhàn","challenge / to challenge",5,"这是一个新挑战。"],
+["困难","kùnnán","difficulty / difficult",5,"遇到困难不要放弃。"],
+["障碍","zhàng'ài","obstacle / barrier",5,"语言是最大的障碍。"],
+["突破","tūpò","breakthrough / to break through",5,"取得了重大突破。"],
+["进步","jìnbù","progress / to improve",5,"你进步很大！"],
+["退步","tuìbù","to regress / regression",5,"成绩退步了。"],
+["趋势","qūshì","trend",5,"这是一个大趋势。"],
+["前景","qiánjǐng","prospect / outlook",5,"前景很好。"],
+["资源","zīyuán","resource",5,"保护自然资源。"],
+["能源","néngyuán","energy",5,"新能源很重要。"],
+["环保","huánbǎo","environmental protection",5,"环保很重要。"],
+["污染","wūrǎn","pollution / to pollute",5,"空气污染很严重。"],
+["气候","qìhòu","climate",5,"气候变化影响很大。"],
+["温度","wēndù","temperature",5,"今天温度很高。"],
+["地震","dìzhèn","earthquake",5,"发生了地震。"],
+["洪水","hóngshuǐ","flood",5,"洪水很危险。"],
+["台风","táifēng","typhoon",5,"台风要来了。"],
+["干旱","gānhàn","drought",5,"今年干旱很严重。"],
+["人口","rénkǒu","population",5,"中国人口很多。"],
+["民族","mínzú","ethnic group / nation",5,"中国有56个民族。"],
+["少数","shǎoshù","minority / few",5,"少数民族文化很丰富。"],
+["地区","dìqū","region / area",5,"这个地区很发达。"],
+["农村","nóngcūn","countryside / rural area",5,"农村变化很大。"],
+["城乡","chéngxiāng","urban and rural",5,"城乡差距在缩小。"],
+["贫困","pínkùn","poverty / poor",5,"消除贫困。"],
+["富裕","fùyù","wealthy / affluent",5,"生活越来越富裕。"],
+["消费","xiāofèi","consumption / to consume",5,"消费水平提高了。"],
+["投资","tóuzī","investment / to invest",5,"投资需谨慎。"],
+["股票","gǔpiào","stock / share",5,"股票涨了。"],
+["房产","fángchǎn","real estate / property",5,"房产市场。"],
+["保险","bǎoxiǎn","insurance / safe",5,"买保险很重要。"],
+["税","shuì","tax",5,"要交税。"],
+["预算","yùsuàn","budget",5,"超出预算了。"],
+["成本","chéngběn","cost",5,"降低成本。"],
+["收入","shōurù","income / revenue",5,"收入增加了。"],
+["支出","zhīchū","expenditure",5,"控制支出。"],
+["贷款","dàikuǎn","loan",5,"我贷了款。"],
+["利息","lìxī","interest (financial)",5,"利息太高了。"],
+["存款","cúnkuǎn","deposit / savings",5,"我有一些存款。"],
+["汇率","huìlǜ","exchange rate",5,"今天汇率怎么样？"],
+
+// HSK 6
+["奥妙","àomiào","mystery / secret / profound",6,"大自然的奥妙无穷。"],
+["暗示","ànshì","to hint / hint",6,"他暗示了我。"],
+["把戏","bǎxì","trick / game",6,"别玩把戏了。"],
+["拜访","bàifǎng","to visit (formal)",6,"我去拜访他。"],
+["拜托","bàituō","to request / please",6,"拜托你帮我一下。"],
+["摆脱","bǎituō","to get rid of / break free",6,"摆脱坏习惯。"],
+["颁布","bānbù","to promulgate / issue",6,"颁布新法律。"],
+["颁发","bānfā","to issue / award",6,"颁发证书。"],
+["版本","bǎnběn","version / edition",6,"这是最新版本。"],
+["半途而废","bàn tú ér fèi","to give up halfway",6,"做事不能半途而废。"],
+["伴随","bànsuí","to accompany",6,"伴随音乐跳舞。"],
+["绑架","bǎngjià","to kidnap",6,"绑架是犯罪。"],
+["榜样","bǎngyàng","example / role model",6,"他是我们的榜样。"],
+["抱怨","bàoyuàn","to complain",6,"别抱怨了。"],
+["背叛","bèipàn","to betray",6,"他背叛了朋友。"],
+["被动","bèidòng","passive",6,"不要太被动。"],
+["奔波","bēnbō","to rush about / toil",6,"他每天奔波。"],
+["本能","běnnéng","instinct",6,"这是人的本能。"],
+["本质","běnzhì","essence / nature",6,"看本质。"],
+["比例","bǐlì","proportion / ratio",6,"比例失调了。"],
+["彼此","bǐcǐ","each other",6,"彼此帮助。"],
+["必然","bìrán","inevitable / certain",6,"这是必然的结果。"],
+["避免","bìmiǎn","to avoid",6,"避免犯错。"],
+["辩论","biànlùn","debate / to debate",6,"我们来辩论一下。"],
+["辨别","biànbié","to distinguish",6,"辨别真假。"],
+["表面","biǎomiàn","surface",6,"不要只看表面。"],
+["并且","bìngqiě","moreover / and also",6,"他聪明并且努力。"],
+["博士","bóshì","doctor (PhD) / doctorate",6,"他是博士。"],
+["薄弱","bóruò","weak / frail",6,"基础薄弱。"],
+["补偿","bǔcháng","to compensate",6,"补偿损失。"],
+["补贴","bǔtiē","subsidy / allowance",6,"政府给补贴。"],
+["捕捉","bǔzhuō","to catch / capture",6,"捕捉到了关键信息。"],
+["才华横溢","cáihuá héngyì","brilliant / talented",6,"她才华横溢。"],
+["财富","cáifù","wealth / fortune",6,"知识是最大的财富。"],
+["财务","cáiwù","finance / financial affairs",6,"财务报告。"],
+["采纳","cǎinà","to adopt / accept (idea)",6,"采纳你的建议。"],
+["参考","cānkǎo","reference / to refer to",6,"仅供参考。"],
+["参谋","cānmóu","advisor / staff officer",6,"请你参谋一下。"],
+["操纵","cāozòng","to manipulate / control",6,"操纵市场。"],
+["操作","cāozuò","to operate / operation",6,"操作很简单。"],
+["侧面","cèmiàn","side / aspect",6,"从侧面了解。"],
+["测量","cèliáng","to measure / survey",6,"测量温度。"],
+["层次","céngcì","level / layer / hierarchy",6,"层次分明。"],
+["差异","chāyì","difference / discrepancy",6,"文化差异。"],
+["产生","chǎnshēng","to produce / generate",6,"产生了新的想法。"],
+["常规","chángguī","routine / conventional",6,"打破常规。"],
+["常年","chángnián","all year round",6,"常年在这里。"],
+["尝试","chángshì","to try / attempt",6,"尝试新事物。"],
+["倡导","chàngdǎo","to advocate",6,"倡导环保。"],
+["超越","chāoyuè","to surpass / transcend",6,"超越自我。"],
+["朝代","cháodài","dynasty",6,"中国有很多朝代。"],
+["潮流","cháoliú","trend / fashion",6,"跟上潮流。"],
+["彻底","chèdǐ","thorough / complete",6,"彻底解决问题。"],
+["沉默","chénmò","silent / silence",6,"他沉默了很久。"],
+["承担","chéngdān","to bear / undertake",6,"承担责任。"],
+["承认","chéngrèn","to admit / acknowledge",6,"我承认我错了。"],
+["承受","chéngshòu","to bear / endure",6,"承受压力。"],
+["成分","chéngfèn","ingredient / component",6,"看看成分表。"],
+["成就","chéngjiù","achievement / accomplish",6,"伟大的成就。"],
+["成立","chénglì","to establish / found",6,"公司成立了。"],
+["成人","chéngrén","adult",6,"成人教育。"],
+["成熟","chéngshú","mature / ripe",6,"他越来越成熟了。"],
+["成语","chéngyǔ","idiom / set phrase",6,"学了很多成语。"],
+["成员","chéngyuán","member",6,"他是团队成员。"],
+["呈现","chéngxiàn","to present / appear",6,"呈现出新面貌。"],
+["诚信","chéngxìn","integrity / honesty",6,"做生意要讲诚信。"],
+["吃亏","chīkuī","to suffer losses",6,"吃亏是福。"],
+["持续","chíxù","to continue / sustain",6,"持续发展。"],
+["充沛","chōngpèi","abundant / full of",6,"精力充沛。"],
+["充分","chōngfèn","sufficient / full",6,"准备充分。"],
+["充满","chōngmǎn","to be full of / filled with",6,"充满活力。"],
+["重复","chóngfù","to repeat / repetition",6,"不要重复犯错。"],
+["宠物","chǒngwù","pet",6,"我养了一只宠物。"],
+["冲动","chōngdòng","impulse / impulsive",6,"不要冲动。"],
+["冲击","chōngjī","impact / shock",6,"文化冲击。"],
+["冲突","chōngtū","conflict",6,"解决冲突。"],
+["充沛","chōngpèi","abundant / energetic",6,"精力充沛。"],
+["抽象","chōuxiàng","abstract",6,"这个概念很抽象。"],
+["丑","chǒu","ugly (zodiac: ox)",6,"不要以貌取人。"],
+["出版","chūbǎn","to publish",6,"出版了一本书。"],
+["出口","chūkǒu","exit / to export",6,"出口在哪里？"],
+["出色","chūsè","outstanding / excellent",6,"表现出色。"],
+["出生","chūshēng","to be born",6,"他出生在北京。"],
+["出席","chūxí","to attend (formal)",6,"出席会议。"],
+["初步","chūbù","initial / preliminary",6,"初步计划。"],
+["除非","chúfēi","unless",6,"除非下雨，否则我一定去。"],
+["处理","chǔlǐ","to handle / deal with",6,"处理问题。"],
+["传播","chuánbō","to spread / disseminate",6,"传播知识。"],
+["传递","chuándì","to pass on / transmit",6,"传递信息。"],
+["传染","chuánrǎn","to infect / contagious",6,"感冒会传染。"],
+["传说","chuánshuō","legend / it is said",6,"传说这里有宝藏。"],
+["创新","chuàngxīn","innovation / to innovate",6,"科技创新很重要。"],
+["创业","chuàngyè","to start a business",6,"他决定创业。"],
+["创作","chuàngzuò","to create (art) / creative work",6,"他在创作新歌。"],
+["吹牛","chuīniú","to brag / boast",6,"别吹牛了。"],
+["垂直","chuízhí","vertical / perpendicular",6,"垂直方向。"],
+["纯粹","chúncuì","pure / purely",6,"纯粹是巧合。"],
+["纯洁","chúnjié","pure / chaste",6,"心灵纯洁。"],
+["词汇","cíhuì","vocabulary",6,"扩大词汇量。"],
+["从此","cóngcǐ","from then on",6,"从此以后。"],
+["从而","cóng'ér","thus / thereby",6,"从而解决问题。"],
+["从前","cóngqián","formerly / once upon a time",6,"从前有一个故事。"],
+["从事","cóngshì","to engage in / pursue",6,"从事教育工作。"],
+["粗糙","cūcāo","rough / crude",6,"做工粗糙。"],
+["促进","cùjìn","to promote / facilitate",6,"促进发展。"],
+["促使","cùshǐ","to urge / prompt",6,"促使他做出决定。"],
+["措施","cuòshī","measure / step (action)",6,"采取措施。"],
+["错误","cuòwù","mistake / error",6,"犯了一个错误。"],
+["挫折","cuòzhé","setback / frustration",6,"面对挫折不要放弃。"],
+["答案","dá'àn","answer",6,"你找到答案了吗？"],
+["达到","dádào","to reach / achieve",6,"达到目标。"],
+["打扮","dǎban","to dress up / make up",6,"她打扮得很漂亮。"],
+["打工","dǎgōng","to work (manual/part-time)",6,"他在打工。"],
+["打交道","dǎ jiāodao","to deal with / interact",6,"跟他打交道要小心。"],
+["打篮球","dǎ lánqiú","to play basketball",6,"周末打篮球。"],
+["打听","dǎtīng","to inquire about",6,"我打听一下。"],
+["大概","dàgài","approximately / probably",6,"大概三点到。"],
+["大使馆","dàshǐguǎn","embassy",6,"去大使馆办签证。"],
+["大约","dàyuē","approximately",6,"大约十公里。"],
+["呆","dāi","to stay (somewhere)",6,"在家呆了一天。"],
+["代表","dàibiǎo","representative / to represent",6,"他代表公司。"],
+["代替","dàitì","to replace / substitute",6,"谁也代替不了你。"],
+["代价","dàijià","price / cost (figurative)",6,"付出了很大的代价。"],
+["贷款","dàikuǎn","loan",6,"申请贷款。"],
+["待遇","dàiyù","treatment / salary",6,"待遇不错。"],
+["担任","dānrèn","to serve as / hold (a position)",6,"他担任总经理。"],
+["单纯","dānchún","simple / pure / naive",6,"她很单纯。"],
+["单调","dāndiào","monotonous",6,"生活太单调了。"],
+["单独","dāndú","alone / individual",6,"单独行动。"],
+["单位","dānwèi","unit / workplace",6,"你在哪个单位工作？"],
+["耽误","dānwù","to delay / hold up",6,"别耽误时间。"],
+["胆小鬼","dǎnxiǎoguǐ","coward",6,"别当胆小鬼。"],
+["淡","dàn","bland / light (flavor)",6,"味道太淡了。"],
+["当代","dāngdài","contemporary / present era",6,"当代艺术。"],
+["当时","dāngshí","at that time / then",6,"当时我不在。"],
+["党","dǎng","political party",6,"他是党员。"],
+["档案","dàng'àn","file / archive / dossier",6,"查看档案。"],
+["导演","dǎoyǎn","director (film) / to direct",6,"这个导演很有名。"],
+["导致","dǎozhì","to lead to / cause",6,"导致了严重的后果。"],
+["岛屿","dǎoyǔ","island",6,"这个岛屿很美。"],
+["倒霉","dǎoméi","unlucky / bad luck",6,"今天真倒霉。"],
+["到达","dàodá","to arrive at / reach",6,"到达目的地了。"],
+["道德","dàodé","morality / ethics",6,"遵守道德规范。"],
+["道理","dàolǐ","reason / sense / truth",6,"你说得有道理。"],
+["登记","dēngjì","to register",6,"请登记一下。"],
+["等待","děngdài","to wait for",6,"等待好消息。"],
+["等于","děngyú","to equal / be equivalent to",6,"一加一等于二。"],
+["滴","dī","drop / to drip",6,"一滴水。"],
+["的确","díquè","indeed / really",6,"的确如此。"],
+["敌人","dírén","enemy",6,"化敌为友。"],
+["地道","dìdao","authentic / genuine",6,"他说一口地道的中文。"],
+["地理","dìlǐ","geography",6,"他地理学得很好。"],
+["地区","dìqū","region / area",6,"这个地区很发达。"],
+["地毯","dìtǎn","carpet / rug",6,"地上铺了地毯。"],
+["地位","dìwèi","status / position",6,"社会地位很高。"],
+["地震","dìzhèn","earthquake",6,"地震后需要重建。"],
+["递","dì","to pass / hand over",6,"递给我一杯水。"],
+["点心","diǎnxīn","dim sum / snack / pastry",6,"吃点心中。"],
+["电池","diànchí","battery",6,"电池没电了。"],
+["电台","diàntái","radio station",6,"听电台节目。"],
+["电子","diànzǐ","electronic / electron",6,"电子书很方便。"],
+["调动","diàodòng","to transfer / mobilize",6,"调动工作。"],
+["顶","dǐng","top / to carry on head / (measure word)",6,"山顶上有一棵树。"],
+["动画片","dònghuàpiàn","cartoon / animated film",6,"孩子们喜欢看动画片。"],
+["冻","dòng","to freeze / frozen",6,"水冻成冰了。"],
+["洞","dòng","hole / cave",6,"墙上有一个洞。"],
+["豆腐","dòufu","tofu / bean curd",6,"麻婆豆腐很好吃。"],
+["逗","dòu","to tease / funny",6,"他说话很逗。"],
+["独立","dúlì","independent / independence",6,"经济独立很重要。"],
+["独特","dútè","unique / distinctive",6,"风格独特。"],
+["度过","dùguò","to spend (time) / pass through",6,"度过了一个愉快的假期。"],
+["断","duàn","to break / cut off",6,"电话断了。"],
+["对比","duìbǐ","to compare / contrast",6,"对比一下两者。"],
+["对待","duìdài","to treat / approach",6,"认真对待工作。"],
+["对方","duìfāng","the other party / counterpart",6,"尊重对方。"],
+["对手","duìshǒu","opponent / rival",6,"他是一个强大的对手。"],
+["对象","duìxiàng","target / object / partner",6,"研究对象。"],
+["吨","dūn","ton",6,"这辆车重两吨。"],
+["蹲","dūn","to squat / crouch",6,"蹲下来。"],
+["多亏","duōkuī","thanks to / luckily",6,"多亏你帮忙。"],
+["多余","duōyú","surplus / unnecessary",6,"这些话是多余的。"],
+["躲藏","duǒcáng","to hide",6,"别躲藏了。"]
+];
+
+// Build word lookup
+const wordMap = {};
+WORDS.forEach((w,i) => {
+  const id = i;
+  if(!wordMap[w[0]]) wordMap[w[0]] = [];
+  wordMap[w[0]].push({id,char:w[0],pinyin:w[1],meaning:w[2],hsk:w[3],example:w[4]||''});
+});
+const allWords = WORDS.map((w,i)=>({id:i,char:w[0],pinyin:w[1],meaning:w[2],hsk:w[3],example:w[4]||''}));
+
+// ═══════════════════════════════════════
+// SRS ENGINE (Ebbinghaus Forgetting Curve)
+// ═══════════════════════════════════════
+const INTERVALS = [1*60*1000, 5*60*1000, 30*60*1000, 12*3600*1000, 24*3600*1000, 2*24*3600*1000, 4*24*3600*1000, 7*24*3600*1000, 15*24*3600*1000, 30*24*3600*1000];
+function formatInterval(ms){
+  if(ms<60000)return'<1m';
+  if(ms<3600000)return Math.round(ms/60000)+'m';
+  if(ms<86400000)return Math.round(ms/3600000)+'h';
+  return Math.round(ms/86400000)+'d';
+}
+function getCardState(id){
+  const s = JSON.parse(localStorage.getItem('srs_'+id)||'null');
+  if(!s) return {id,stage:0,due:0,reviews:0,correct:0,lastReview:0};
+  return s;
+}
+function saveCardState(s){localStorage.setItem('srs_'+s.id,JSON.stringify(s))}
+function gradeCard(id,quality){
+  // quality: 0=again, 1=hard, 2=good, 3=easy
+  const s = getCardState(id);
+  s.reviews++;
+  s.lastReview = Date.now();
+  if(quality===0){s.stage=0;s.due=Date.now()+INTERVALS[0]}
+  else if(quality===1){s.stage=Math.max(0,s.stage);s.due=Date.now()+INTERVALS[Math.min(s.stage,INTERVALS.length-1)]*1.2}
+  else if(quality===2){s.stage=Math.min(s.stage+1,INTERVALS.length-1);s.due=Date.now()+INTERVALS[s.stage];s.correct++}
+  else{s.stage=Math.min(s.stage+2,INTERVALS.length-1);s.due=Date.now()+INTERVALS[s.stage]*1.5;s.correct++}
+  saveCardState(s);
+  return s;
+}
+function getDueWords(){
+  const now=Date.now();
+  return allWords.filter(w=>{const s=getCardState(w.id);return s.due<=now});
+}
+function getNewWords(limit=10){
+  const unseen=allWords.filter(w=>{const s=getCardState(w.id);return s.reviews===0});
+  return unseen.slice(0,limit);
+}
+function getStats(){
+  let total=allWords.length,reviewed=0,learned=0,due=0,totalReviews=0,totalCorrect=0;
+  const now=Date.now();
+  allWords.forEach(w=>{
+    const s=getCardState(w.id);
+    if(s.reviews>0)reviewed++;
+    if(s.stage>=4)learned++;
+    if(s.due<=now&&s.reviews>0)due++;
+    totalReviews+=s.reviews;
+    totalCorrect+=s.correct;
+  });
+  return{total,reviewed,learned,due,newCount:total-reviewed,totalReviews,totalCorrect,accuracy:totalReviews>0?Math.round(totalCorrect/totalReviews*100):0};
+}
+function getForecast(){
+  const days={};
+  allWords.forEach(w=>{
+    const s=getCardState(w.id);
+    if(s.due>Date.now()){
+      const d=new Date(s.due);
+      const key=d.toISOString().slice(0,10);
+      days[key]=(days[key]||0)+1;
+    }
+  });
+  return Object.entries(days).sort().slice(0,7).map(([d,c])=>({date:d,count:c}));
+}
+function getReviewHistory(){
+  return JSON.parse(localStorage.getItem('review_history')||'{}');
+}
+function recordReview(){
+  const h=getReviewHistory();
+  const today=new Date().toISOString().slice(0,10);
+  h[today]=(h[today]||0)+1;
+  localStorage.setItem('review_history',JSON.stringify(h));
+}
+function getStreak(){
+  const h=getReviewHistory();
+  let streak=0;
+  const d=new Date();
+  while(true){
+    const key=d.toISOString().slice(0,10);
+    if(h[key]&&h[key]>0){streak++;d.setDate(d.getDate()-1)}
+    else break;
+  }
+  return streak;
+}
+function getHSKProgress(){
+  const levels={1:{total:0,learned:0},2:{total:0,learned:0},3:{total:0,learned:0},4:{total:0,learned:0},5:{total:0,learned:0},6:{total:0,learned:0}};
+  allWords.forEach(w=>{
+    const s=getCardState(w.id);
+    levels[w.hsk].total++;
+    if(s.reviews>0)levels[w.hsk].learned++;
+  });
+  return levels;
+}
+
+// ═══════════════════════════════════════
+// UI
+// ═══════════════════════════════════════
+let currentQueue=[],queueIndex=0,sessionReviewed=0,sessionCorrect=0,sessionStart=0;
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{b.classList.toggle('active',['dash','browse','stats'][i]===name)});
+  if(name==='dash')updateDash();
+  if(name==='browse')renderBrowse();
+  if(name==='stats')renderStats();
+}
+
+function updateDash(){
+  const stats=getStats();
+  const h=new Date().getHours();
+  const greet=h<12?'Good morning':h<18?'Good afternoon':'Good evening';
+  document.getElementById('greeting').textContent=greet;
+  document.getElementById('ds-review').textContent=stats.due;
+  document.getElementById('ds-new').textContent=Math.min(stats.newCount,10);
+  document.getElementById('ds-streak').textContent=getStreak();
+  const sub=stats.due>0?stats.due+' words waiting for review':'All caught up! Learn some new words.';
+  document.getElementById('dash-sub').textContent=sub;
+  const btnReview=document.getElementById('btn-start-review');
+  const btnNew=document.getElementById('btn-start-new');
+  if(stats.due>0){btnReview.textContent='Review '+stats.due+' Words';btnReview.className='start-btn review'}
+  else{btnReview.textContent='No Reviews Due';btnReview.className='start-btn done'}
+  if(stats.newCount>0){btnNew.textContent='Learn '+Math.min(stats.newCount,10)+' New Words';btnNew.className='start-btn new'}
+  else{btnNew.textContent='All Words Learned!';btnNew.className='start-btn done'}
+  const hsk=getHSKProgress();
+  let html='';
+  for(let l=1;l<=6;l++){
+    const pct=hsk[l].total>0?Math.round(hsk[l].learned/hsk[l].total*100):0;
+    html+='<div class="hsk-row"><span class="hsk-badge">HSK '+l+'</span><div class="hsk-bar"><div class="hsk-fill" style="width:'+pct+'%"></div></div><span class="hsk-count">'+hsk[l].learned+'/'+hsk[l].total+'</span></div>';
+  }
+  document.getElementById('hsk-levels').innerHTML=html;
+}
+
+function startReview(){
+  const due=getDueWords();
+  if(due.length===0)return;
+  currentQueue=due.sort(()=>Math.random()-.5);
+  queueIndex=0;sessionReviewed=0;sessionCorrect=0;sessionStart=Date.now();
+  showPage('review');
+  showCard();
+}
+function startNew(){
+  const newW=getNewWords(10);
+  if(newW.length===0)return;
+  currentQueue=newW;
+  queueIndex=0;sessionReviewed=0;sessionCorrect=0;sessionStart=Date.now();
+  showPage('review');
+  showCard();
+}
+function showCard(){
+  if(queueIndex>=currentQueue.length){endReview();return}
+  const w=currentQueue[queueIndex];
+  document.getElementById('cf-char').textContent=w.char;
+  document.getElementById('cf-pinyin').textContent=w.pinyin;
+  document.getElementById('cf-hsk').textContent='HSK '+w.hsk;
+  document.getElementById('cb-char').textContent=w.char;
+  document.getElementById('cb-pinyin').textContent=w.pinyin;
+  document.getElementById('cb-meaning').textContent=w.meaning;
+  document.getElementById('cb-example').textContent=w.example||'';
+  document.getElementById('flashcard').classList.remove('flipped');
+  document.getElementById('grade-btns').style.display='none';
+  const total=currentQueue.length;
+  document.getElementById('review-count').textContent=(queueIndex+1)+'/'+total;
+  document.getElementById('rp-fill').style.width=((queueIndex)/total*100)+'%';
+  const s=getCardState(w.id);
+  const base=INTERVALS[Math.min(s.stage,INTERVALS.length-1)];
+  document.getElementById('gi-again').textContent=formatInterval(INTERVALS[0]);
+  document.getElementById('gi-hard').textContent=formatInterval(base*1.2);
+  document.getElementById('gi-good').textContent=formatInterval(INTERVALS[Math.min(s.stage+1,INTERVALS.length-1)]);
+  document.getElementById('gi-easy').textContent=formatInterval(INTERVALS[Math.min(s.stage+2,INTERVALS.length-1)]*1.5);
+}
+function flipCard(){
+  const card=document.getElementById('flashcard');
+  card.classList.toggle('flipped');
+  if(card.classList.contains('flipped'))document.getElementById('grade-btns').style.display='grid';
+}
+function grade(quality){
+  const w=currentQueue[queueIndex];
+  gradeCard(w.id,quality);
+  recordReview();
+  sessionReviewed++;
+  if(quality>=2)sessionCorrect++;
+  if(quality===0){currentQueue.push(w)}
+  queueIndex++;
+  showCard();
+}
+function endReview(){
+  const mins=Math.round((Date.now()-sessionStart)/60000);
+  document.getElementById('cs-reviewed').textContent=sessionReviewed;
+  document.getElementById('cs-correct').textContent=sessionCorrect;
+  document.getElementById('cs-time').textContent=mins+'m';
+  if(sessionReviewed>=10){document.getElementById('complete-title').textContent='Great Session!';document.getElementById('complete-sub').textContent='Keep up the good work!'}
+  else{document.getElementById('complete-title').textContent='Session Complete';document.getElementById('complete-sub').textContent='Come back later for more reviews.'}
+  showPage('complete');
+}
+
+let browseFilter='all';
+function setFilter(f){
+  browseFilter=f;
+  document.querySelectorAll('.browse-filter').forEach(b=>{b.classList.toggle('active',(f==='all'&&b.textContent==='All')||('HSK '+f===b.textContent))});
+  renderBrowse();
+}
+function filterWords(){renderBrowse()}
+function renderBrowse(){
+  const q=(document.getElementById('browse-search').value||'').toLowerCase();
+  let words=allWords;
+  if(browseFilter!=='all')words=words.filter(w=>w.hsk===browseFilter);
+  if(q)words=words.filter(w=>w.char.includes(q)||w.pinyin.toLowerCase().includes(q)||w.meaning.toLowerCase().includes(q));
+  words=words.slice(0,100);
+  let html='';
+  words.forEach(w=>{
+    const s=getCardState(w.id);
+    const cls=s.reviews===0?'unseen':s.due<=Date.now()?'due':'learned';
+    html+='<div class="browse-item"><span class="bi-status '+cls+'"></span><span class="bi-char">'+w.char+'</span><span class="bi-pinyin">'+w.pinyin+'</span><span class="bi-meaning">'+w.meaning+'</span><span class="bi-level">HSK '+w.hsk+'</span></div>';
+  });
+  document.getElementById('browse-list').innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">No words found</div>';
+}
+function renderStats(){
+  const s=getStats();
+  document.getElementById('st-total').textContent=s.total;
+  document.getElementById('st-learned').textContent=s.learned;
+  document.getElementById('st-reviews').textContent=s.totalReviews;
+  document.getElementById('st-accuracy').textContent=s.accuracy+'%';
+  const h=getReviewHistory();
+  let hmHtml='';
+  const today=new Date();
+  for(let i=29;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const key=d.toISOString().slice(0,10);
+    const c=h[key]||0;
+    const lvl=c===0?'':c<5?'l1':c<15?'l2':c<30?'l3':'l4';
+    hmHtml+='<div class="hm-day '+lvl+'" title="'+key+': '+c+' reviews"></div>';
+  }
+  document.getElementById('heatmap').innerHTML=hmHtml;
+  const fc=getForecast();
+  let fcHtml='';
+  fc.forEach(f=>{
+    const d=new Date(f.date);
+    const label=d.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'});
+    fcHtml+='<div class="forecast-row"><span class="fr-day">'+label+'</span><span class="fr-count">'+f.count+' words</span></div>';
+  });
+  if(!fcHtml)fcHtml='<div style="text-align:center;padding:12px;color:var(--text3);font-size:11px">No upcoming reviews</div>';
+  document.getElementById('forecast').innerHTML=fcHtml;
+}
+
+// Init
+updateDash();
+</script>
+</body>
+</html>
