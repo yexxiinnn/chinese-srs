@@ -178,16 +178,16 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
     </div>
   </div>
   <div class="grade-btns" id="grade-btns" style="display:none">
-    <button class="grade-btn again" onclick="grade(0)">不知道<span class="gb-interval" id="gi-again">1m</span></button>
-    <button class="grade-btn hard" onclick="grade(1)">模糊<span class="gb-interval" id="gi-hard">6m</span></button>
-    <button class="grade-btn good" onclick="grade(2)">知道<span class="gb-interval" id="gi-good">10m</span></button>
+    <button class="grade-btn again" onclick="grade(0)">Don't know<span class="gb-interval" id="gi-again">1m</span></button>
+    <button class="grade-btn hard" onclick="grade(1)">Fuzzy<span class="gb-interval" id="gi-hard">6m</span></button>
+    <button class="grade-btn good" onclick="grade(2)">Know<span class="gb-interval" id="gi-good">10m</span></button>
   </div>
   <div class="mcq-container" id="mcq-container">
-    <div class="mcq-label">这个词是什么意思？</div>
+    <div class="mcq-label">What does this mean?</div>
     <div class="mcq-char" id="mcq-char"></div>
     <div class="mcq-pinyin" id="mcq-pinyin"></div>
     <div class="mcq-options" id="mcq-options"></div>
-    <button class="mcq-next" id="mcq-next" onclick="mcqNext()">继续</button>
+    <button class="mcq-next" id="mcq-next" onclick="mcqNext()">Continue</button>
   </div>
 </div>
 
@@ -1293,7 +1293,7 @@ function selectMCQ(btn,isCorrect,w){
   if(isCorrect)sessionCorrect++;
   if(!isCorrect){currentQueue.push(w)}
   document.getElementById('mcq-next').style.display='block';
-  document.getElementById('mcq-next').textContent=queueIndex+1>=currentQueue.length?'完成':'继续';
+  document.getElementById('mcq-next').textContent=queueIndex+1>=currentQueue.length?'Finish':'Continue';
 }
 function mcqNext(){
   queueIndex++;
