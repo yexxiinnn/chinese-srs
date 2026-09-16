@@ -1153,7 +1153,7 @@ function getHSKProgress(){
 // UI
 // ═══════════════════════════════════════
 let currentQueue=[],queueIndex=0,sessionReviewed=0,sessionCorrect=0,sessionStart=0;
-let currentMode='flip',mcqAnswered=false;
+let currentMode='flip',mcqAnswered=false,isLearning=false;
 
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1193,7 +1193,7 @@ function startReview(){
   const due=getDueWords();
   if(due.length===0)return;
   currentQueue=due.sort(()=>Math.random()-.5);
-  queueIndex=0;sessionReviewed=0;sessionCorrect=0;sessionStart=Date.now();
+  queueIndex=0;sessionReviewed=0;sessionCorrect=0;sessionStart=Date.now();isLearning=false;
   showPage('review');
   showCard();
 }
@@ -1201,7 +1201,7 @@ function startNew(){
   const newW=getNewWords(10);
   if(newW.length===0)return;
   currentQueue=newW;
-  queueIndex=0;sessionReviewed=0;sessionCorrect=0;sessionStart=Date.now();
+  queueIndex=0;sessionReviewed=0;sessionCorrect=0;sessionStart=Date.now();isLearning=true;
   showPage('review');
   showCard();
 }
@@ -1311,7 +1311,7 @@ function grade(quality){
   recordReview();
   sessionReviewed++;
   if(quality>=2)sessionCorrect++;
-  if(quality===0){currentQueue.push(w)}
+  if(isLearning?quality<2:quality===0){currentQueue.push(w)}
   queueIndex++;
   showCard();
 }
