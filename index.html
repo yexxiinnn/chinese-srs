@@ -46,33 +46,51 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
 .start-btn.done{background:var(--bg2);color:var(--text3);border:1px solid var(--border)}
 
 /* ═══ REVIEW ═══ */
-.review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .review-progress{flex:1;height:3px;background:var(--bg3);border-radius:2px;margin:0 12px;overflow:hidden}
 .review-progress .rp-fill{height:100%;background:var(--text3);border-radius:2px;transition:width .3s}
 .review-count{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums}
 .review-close{font-size:18px;color:var(--text3);padding:4px 8px;cursor:default}
 
-.card-container{perspective:800px;margin-bottom:16px}
-.card{width:100%;min-height:220px;position:relative;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.4,.0,.2,1);cursor:default}
-.card.flipped{transform:rotateY(180deg)}
-.card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:8px;border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
-.card-front{background:var(--bg2)}
-.card-back{background:var(--bg2);transform:rotateY(180deg)}
-.card-char{font-size:52px;font-weight:700;margin-bottom:8px;line-height:1.2}
-.card-pinyin{font-size:16px;color:var(--text2);margin-bottom:4px}
-.card-hsk{font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:2px;margin-top:8px}
-.card-meaning{font-size:20px;font-weight:600;margin-bottom:8px}
-.card-example{font-size:12px;color:var(--text2);text-align:center;line-height:1.6;max-width:280px}
-.card-hint{font-size:10px;color:var(--text3);margin-top:12px}
+/* ═══ SWIPE AREA ═══ */
+.swipe-area{position:relative;width:100%;height:300px;overflow:hidden;border-radius:10px;touch-action:none;user-select:none;-webkit-user-select:none}
+.swipe-card{position:absolute;inset:0;border-radius:10px;border:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;cursor:grab;will-change:transform;transition:none;z-index:2}
+.swipe-card.dragging{cursor:grabbing;transition:none}
+.swipe-card.flying{transition:transform .35s cubic-bezier(.2,.8,.3,1),opacity .35s;opacity:0}
+.swipe-card.entering{transition:transform .3s cubic-bezier(.2,.8,.3,1),opacity .3s;opacity:1;transform:translate(0,0) rotate(0)}
+.sc-char{font-size:48px;font-weight:700;line-height:1.2;margin-bottom:6px;pointer-events:none}
+.sc-pinyin{font-size:15px;color:var(--text2);margin-bottom:4px;pointer-events:none}
+.sc-hsk{font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:2px;margin-top:6px;pointer-events:none}
+.sc-meaning{font-size:18px;font-weight:600;margin-bottom:6px;pointer-events:none}
+.sc-example{font-size:11px;color:var(--text2);text-align:center;line-height:1.6;max-width:280px;pointer-events:none}
+.sc-divider{width:40px;height:1px;background:var(--border);margin:10px 0;pointer-events:none}
+.sc-hint{font-size:10px;color:var(--text3);margin-top:10px;pointer-events:none}
+/* Back face (hidden initially) */
+.swipe-card .sc-back{display:none;flex-direction:column;align-items:center}
+.swipe-card.revealed .sc-front{display:none}
+.swipe-card.revealed .sc-back{display:flex}
 
-.grade-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.grade-btn{padding:12px 4px;font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:5px;text-align:center;cursor:default;transition:all .12s;background:var(--bg2);color:var(--text2);font-family:inherit}
-.grade-btn:active{transform:scale(.96)}
-.grade-btn.again{border-color:var(--red);color:var(--red)}
-.grade-btn.hard{border-color:var(--orange);color:var(--orange)}
-.grade-btn.good{border-color:var(--green);color:var(--green)}
-.grade-btn.easy{border-color:var(--blue);color:var(--blue)}
-.grade-btn .gb-interval{font-size:9px;font-weight:400;color:var(--text3);margin-top:2px;display:block}
+/* Swipe indicators */
+.swipe-ind{position:absolute;top:20px;padding:6px 16px;border-radius:4px;font-size:13px;font-weight:700;opacity:0;transition:opacity .1s;pointer-events:none;z-index:5}
+.swipe-ind.ind-right{right:16px;border:2px solid var(--green);color:var(--green)}
+.swipe-ind.ind-left{left:16px;border:2px solid var(--red);color:var(--red)}
+/* Direction hints at bottom */
+.swipe-hints{display:flex;justify-content:space-between;padding:8px 4px 0;font-size:10px;color:var(--text3)}
+
+/* ═══ MCQ SWIPE ═══ */
+.mcq-area{display:none;position:relative;width:100%;height:400px;touch-action:none;user-select:none;-webkit-user-select:none}
+.mcq-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:2;pointer-events:none}
+.mcq-center .mc-char{font-size:44px;font-weight:700;line-height:1.2}
+.mcq-center .mc-pinyin{font-size:14px;color:var(--text2);margin-top:2px}
+.mcq-dir{position:absolute;display:flex;align-items:center;justify-content:center;width:calc(100% - 16px);padding:10px;font-size:12px;font-weight:500;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:8px;transition:all .2s;z-index:1;pointer-events:none;line-height:1.4;text-align:center}
+.mcq-dir.dir-up{top:4px;left:8px}
+.mcq-dir.dir-down{bottom:4px;left:8px}
+.mcq-dir.dir-left{top:50%;left:8px;transform:translateY(-50%);width:auto;padding:10px 14px}
+.mcq-dir.dir-right{top:50%;right:8px;transform:translateY(-50%);width:auto;padding:10px 14px;left:auto}
+.mcq-dir.highlight{border-color:var(--text);color:var(--text);background:var(--bg3)}
+.mcq-dir.correct-hl{border-color:var(--green);color:var(--green);background:rgba(68,170,68,.1)}
+.mcq-dir.wrong-hl{border-color:var(--red);color:var(--red);background:rgba(170,68,68,.08)}
+.mcq-feedback{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;font-weight:800;z-index:10;pointer-events:none;opacity:0;transition:opacity .3s}
 
 /* ═══ BROWSE ═══ */
 .browse-search{width:100%;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:5px;font-size:13px;color:var(--text);outline:none;margin-bottom:10px;font-family:inherit}
@@ -101,20 +119,6 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
 .forecast-row{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px solid var(--border)}
 .forecast-row:last-child{border:none}
 .forecast-row .fr-day{color:var(--text2)}.forecast-row .fr-count{font-weight:600}
-
-/* ═══ MCQ ═══ */
-.mcq-container{display:none;margin-bottom:16px}
-.mcq-label{font-size:10px;color:var(--text3);text-align:center;margin-bottom:4px;letter-spacing:.3px;text-transform:uppercase}
-.mcq-char{font-size:48px;font-weight:700;text-align:center;margin-bottom:4px;line-height:1.2}
-.mcq-pinyin{font-size:14px;color:var(--text2);text-align:center;margin-bottom:16px}
-.mcq-options{display:flex;flex-direction:column;gap:6px}
-.mcq-opt{padding:14px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;text-align:left;cursor:default;transition:all .15s;color:var(--text);font-family:inherit;line-height:1.4}
-.mcq-opt:active{transform:scale(.98)}
-.mcq-opt.correct{border-color:var(--green);background:rgba(68,170,68,.12);color:var(--green)}
-.mcq-opt.wrong{border-color:var(--red);background:rgba(170,68,68,.1);color:var(--red);text-decoration:line-through;opacity:.7}
-.mcq-opt.reveal{border-color:var(--green);opacity:1}
-.mcq-opt.disabled{pointer-events:none;opacity:.5}
-.mcq-next{width:100%;padding:12px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:default;margin-top:8px;font-family:inherit;background:var(--text);color:var(--bg);display:none}
 
 /* ═══ COMPLETE ═══ */
 .complete{text-align:center;padding:40px 20px}
@@ -161,33 +165,44 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
     <div class="review-progress"><div class="rp-fill" id="rp-fill"></div></div>
     <span class="review-count" id="review-count">0/0</span>
   </div>
-  <div class="card-container" id="card-container" onclick="flipCard()">
-    <div class="card" id="flashcard">
-      <div class="card-face card-front">
-        <div class="card-char" id="cf-char"></div>
-        <div class="card-pinyin" id="cf-pinyin"></div>
-        <div class="card-hsk" id="cf-hsk"></div>
-        <div class="card-hint">tap to reveal</div>
+
+  <!-- Flashcard swipe mode -->
+  <div class="swipe-area" id="swipe-area">
+    <div class="swipe-ind ind-right" id="ind-right">KNOW</div>
+    <div class="swipe-ind ind-left" id="ind-left">NOPE</div>
+    <div class="swipe-card" id="swipe-card">
+      <div class="sc-front">
+        <div class="sc-char" id="sf-char"></div>
+        <div class="sc-pinyin" id="sf-pinyin"></div>
+        <div class="sc-hsk" id="sf-hsk"></div>
+        <div class="sc-hint">tap to reveal</div>
       </div>
-      <div class="card-face card-back">
-        <div class="card-char" id="cb-char"></div>
-        <div class="card-pinyin" id="cb-pinyin"></div>
-        <div class="card-meaning" id="cb-meaning"></div>
-        <div class="card-example" id="cb-example"></div>
+      <div class="sc-back">
+        <div class="sc-char" id="sb-char"></div>
+        <div class="sc-pinyin" id="sb-pinyin"></div>
+        <div class="sc-meaning" id="sb-meaning"></div>
+        <div class="sc-divider"></div>
+        <div class="sc-example" id="sb-example"></div>
       </div>
     </div>
   </div>
-  <div class="grade-btns" id="grade-btns" style="display:none">
-    <button class="grade-btn again" onclick="grade(0)">Don't know<span class="gb-interval" id="gi-again">1m</span></button>
-    <button class="grade-btn hard" onclick="grade(1)">Fuzzy<span class="gb-interval" id="gi-hard">6m</span></button>
-    <button class="grade-btn good" onclick="grade(2)">Know<span class="gb-interval" id="gi-good">10m</span></button>
+  <div class="swipe-hints" id="swipe-hints">
+    <span style="color:var(--red)">&larr; Don't know</span>
+    <span>tap to flip</span>
+    <span style="color:var(--green)">Know &rarr;</span>
   </div>
-  <div class="mcq-container" id="mcq-container">
-    <div class="mcq-label">What does this mean?</div>
-    <div class="mcq-char" id="mcq-char"></div>
-    <div class="mcq-pinyin" id="mcq-pinyin"></div>
-    <div class="mcq-options" id="mcq-options"></div>
-    <button class="mcq-next" id="mcq-next" onclick="mcqNext()">Continue</button>
+
+  <!-- MCQ directional swipe mode -->
+  <div class="mcq-area" id="mcq-area">
+    <div class="mcq-dir dir-up" id="mcq-up"></div>
+    <div class="mcq-dir dir-down" id="mcq-down"></div>
+    <div class="mcq-dir dir-left" id="mcq-left"></div>
+    <div class="mcq-dir dir-right" id="mcq-right"></div>
+    <div class="mcq-center">
+      <div class="mc-char" id="mc-char"></div>
+      <div class="mc-pinyin" id="mc-pinyin"></div>
+    </div>
+    <div class="mcq-feedback" id="mcq-feedback"></div>
   </div>
 </div>
 
@@ -1153,7 +1168,13 @@ function getHSKProgress(){
 // UI
 // ═══════════════════════════════════════
 let currentQueue=[],queueIndex=0,sessionReviewed=0,sessionCorrect=0,sessionStart=0;
-let currentMode='flip',mcqAnswered=false,isLearning=false;
+let currentMode='flip',isLearning=false,cardRevealed=false;
+
+// Swipe state
+let swiping=false,startX=0,startY=0,dx=0,dy=0,swipeThreshold=80;
+let mcqSwiping=false,mcqStartX=0,mcqStartY=0,mcqAnswered=false;
+// MCQ option mapping: [up, down, left, right]
+let mcqOptions=[null,null,null,null],mcqCorrectDir=-1,mcqWord=null;
 
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1205,49 +1226,139 @@ function startNew(){
   showPage('review');
   showCard();
 }
+
 function showCard(){
   if(queueIndex>=currentQueue.length){endReview();return}
   const w=currentQueue[queueIndex];
   const total=currentQueue.length;
   document.getElementById('review-count').textContent=(queueIndex+1)+'/'+total;
   document.getElementById('rp-fill').style.width=((queueIndex)/total*100)+'%';
-  // Decide mode: MCQ if enough distractors exist, else flip
+  cardRevealed=false;
   const distractors=getDistractors(w,3);
-  if(distractors.length>=3&&Math.random()<0.5){
+  if(distractors.length>=3&&Math.random()<0.45){
     currentMode='mcq';
     showMCQ(w,distractors);
   } else {
     currentMode='flip';
-    showFlip(w);
+    showFlipCard(w);
   }
 }
-function showFlip(w){
-  document.getElementById('card-container').style.display='block';
-  document.getElementById('mcq-container').style.display='none';
-  document.getElementById('cf-char').textContent=w.char;
-  document.getElementById('cf-pinyin').textContent=w.pinyin;
-  document.getElementById('cf-hsk').textContent='HSK '+w.hsk;
-  document.getElementById('cb-char').textContent=w.char;
-  document.getElementById('cb-pinyin').textContent=w.pinyin;
-  document.getElementById('cb-meaning').textContent=w.meaning;
-  document.getElementById('cb-example').textContent=w.example||'';
-  document.getElementById('flashcard').classList.remove('flipped');
-  document.getElementById('grade-btns').style.display='none';
-  const s=getCardState(w.id);
-  const base=INTERVALS[Math.min(s.stage,INTERVALS.length-1)];
-  document.getElementById('gi-again').textContent=formatInterval(INTERVALS[0]);
-  document.getElementById('gi-hard').textContent=formatInterval(base*1.2);
-  document.getElementById('gi-good').textContent=formatInterval(INTERVALS[Math.min(s.stage+1,INTERVALS.length-1)]);
+
+// ═══ FLASHCARD SWIPE ═══
+function showFlipCard(w){
+  document.getElementById('swipe-area').style.display='block';
+  document.getElementById('swipe-hints').style.display='flex';
+  document.getElementById('mcq-area').style.display='none';
+  const card=document.getElementById('swipe-card');
+  card.classList.remove('revealed','flying','entering','dragging');
+  card.style.transform='';card.style.opacity='1';
+  document.getElementById('sf-char').textContent=w.char;
+  document.getElementById('sf-pinyin').textContent=w.pinyin;
+  document.getElementById('sf-hsk').textContent='HSK '+w.hsk;
+  document.getElementById('sb-char').textContent=w.char;
+  document.getElementById('sb-pinyin').textContent=w.pinyin;
+  document.getElementById('sb-meaning').textContent=w.meaning;
+  document.getElementById('sb-example').textContent=w.example||'';
+  document.getElementById('ind-right').style.opacity='0';
+  document.getElementById('ind-left').style.opacity='0';
 }
+
+function flipCard(){
+  if(currentMode!=='flip')return;
+  const card=document.getElementById('swipe-card');
+  cardRevealed=!cardRevealed;
+  card.classList.toggle('revealed',cardRevealed);
+}
+
+function flyCard(dir){
+  // dir: 'left' or 'right'
+  const card=document.getElementById('swipe-card');
+  const w=currentQueue[queueIndex];
+  const x=dir==='right'?500:-500;
+  const rot=dir==='right'?25:-25;
+  card.classList.add('flying');
+  card.style.transform='translate('+x+'px,0) rotate('+rot+'deg)';
+  // Grade: right=Know(2), left=Don't know(0)
+  const quality=dir==='right'?2:0;
+  gradeCard(w.id,quality);
+  recordReview();
+  sessionReviewed++;
+  if(quality>=2)sessionCorrect++;
+  if(isLearning?quality<2:quality===0){currentQueue.push(w)}
+  setTimeout(()=>{
+    queueIndex++;
+    showCard();
+  },350);
+}
+
+// Swipe event handlers for flashcard
+(function(){
+  const area=document.getElementById('swipe-area');
+  const card=document.getElementById('swipe-card');
+  const indR=document.getElementById('ind-right');
+  const indL=document.getElementById('ind-left');
+  let tapTimer=0;
+
+  function onStart(e){
+    if(card.classList.contains('flying'))return;
+    const t=e.touches?e.touches[0]:e;
+    swiping=true;startX=t.clientX;startY=t.clientY;dx=0;dy=0;
+    tapTimer=Date.now();
+    card.classList.remove('entering');
+    card.classList.add('dragging');
+    card.style.transition='none';
+  }
+  function onMove(e){
+    if(!swiping)return;
+    const t=e.touches?e.touches[0]:e;
+    dx=t.clientX-startX;dy=t.clientY-startY;
+    const rot=dx*0.08;
+    card.style.transform='translate('+dx+'px,'+dy*0.3+'px) rotate('+rot+'deg)';
+    // Show indicators
+    const pct=Math.min(Math.abs(dx)/swipeThreshold,1);
+    if(dx>0){indR.style.opacity=pct;indL.style.opacity=0}
+    else{indL.style.opacity=pct;indR.style.opacity=0}
+    if(e.cancelable)e.preventDefault();
+  }
+  function onEnd(){
+    if(!swiping)return;
+    swiping=false;
+    card.classList.remove('dragging');
+    // Check if swipe or tap
+    const elapsed=Date.now()-tapTimer;
+    if(Math.abs(dx)<15&&Math.abs(dy)<15&&elapsed<300){
+      // It's a tap - flip
+      card.style.transform='';card.style.transition='';
+      flipCard();
+      return;
+    }
+    if(dx>swipeThreshold){
+      flyCard('right');
+    } else if(dx<-swipeThreshold){
+      flyCard('left');
+    } else {
+      // Snap back
+      card.classList.add('entering');
+      card.style.transform='translate(0,0) rotate(0)';
+      indR.style.opacity='0';indL.style.opacity='0';
+    }
+  }
+  area.addEventListener('mousedown',onStart);
+  area.addEventListener('mousemove',onMove);
+  area.addEventListener('mouseup',onEnd);
+  area.addEventListener('mouseleave',()=>{if(swiping)onEnd()});
+  area.addEventListener('touchstart',onStart,{passive:true});
+  area.addEventListener('touchmove',onMove,{passive:false});
+  area.addEventListener('touchend',onEnd);
+})();
+
+// ═══ MCQ DIRECTIONAL SWIPE ═══
 function getDistractors(w,count){
-  // Prefer same HSK level, fallback to nearby
   const pool=allWords.filter(x=>x.id!==w.id&&x.meaning!==w.meaning);
   const sameHsk=pool.filter(x=>x.hsk===w.hsk);
   const nearHsk=pool.filter(x=>Math.abs(x.hsk-w.hsk)<=1);
   const source=sameHsk.length>=count?sameHsk:nearHsk.length>=count?nearHsk:pool;
-  // Shuffle and pick
   const shuffled=source.sort(()=>Math.random()-.5);
-  // Deduplicate by meaning
   const seen=new Set([w.meaning]);
   const result=[];
   for(const x of shuffled){
@@ -1255,66 +1366,117 @@ function getDistractors(w,count){
   }
   return result;
 }
+
 function showMCQ(w,distractors){
-  mcqAnswered=false;
-  document.getElementById('card-container').style.display='none';
-  document.getElementById('grade-btns').style.display='none';
-  document.getElementById('mcq-container').style.display='block';
-  document.getElementById('mcq-char').textContent=w.char;
-  document.getElementById('mcq-pinyin').textContent=w.pinyin;
-  document.getElementById('mcq-next').style.display='none';
-  // Build options: correct + distractors, shuffled
+  mcqAnswered=false;mcqWord=w;
+  document.getElementById('swipe-area').style.display='none';
+  document.getElementById('swipe-hints').style.display='none';
+  document.getElementById('mcq-area').style.display='block';
+  document.getElementById('mc-char').textContent=w.char;
+  document.getElementById('mc-pinyin').textContent=w.pinyin;
+  document.getElementById('mcq-feedback').style.opacity='0';
+  // Build 4 options, assign to directions [up, down, left, right]
   const options=[{meaning:w.meaning,correct:true},...distractors.map(d=>({meaning:d.meaning,correct:false}))];
   options.sort(()=>Math.random()-.5);
-  const container=document.getElementById('mcq-options');
-  container.innerHTML='';
-  options.forEach((opt,i)=>{
-    const btn=document.createElement('button');
-    btn.className='mcq-opt';
-    btn.textContent=opt.meaning;
-    btn.onclick=()=>selectMCQ(btn,opt.correct,w);
-    container.appendChild(btn);
+  mcqOptions=options;
+  const dirs=['up','down','left','right'];
+  const labels=['↑ ','↓ ','← ','→ '];
+  dirs.forEach((d,i)=>{
+    const el=document.getElementById('mcq-'+d);
+    el.textContent=labels[i]+options[i].meaning;
+    el.className='mcq-dir dir-'+d;
+    mcqCorrectDir=options[i].correct?i:-1;
   });
+  // Store correct index
+  mcqCorrectDir=options.findIndex(o=>o.correct);
 }
-function selectMCQ(btn,isCorrect,w){
+
+function resolveMCQ(swipeDirIdx){
   if(mcqAnswered)return;
   mcqAnswered=true;
-  const opts=document.querySelectorAll('.mcq-opt');
-  opts.forEach(o=>{
-    o.classList.add('disabled');
-    if(o===btn){o.classList.add(isCorrect?'correct':'wrong')}
-    // Reveal correct answer
-    if(!isCorrect&&o.textContent===w.meaning)o.classList.add('reveal');
+  const isCorrect=swipeDirIdx===mcqCorrectDir;
+  const dirs=['up','down','left','right'];
+  // Highlight selected + reveal correct
+  dirs.forEach((d,i)=>{
+    const el=document.getElementById('mcq-'+d);
+    if(i===swipeDirIdx){
+      el.classList.add(isCorrect?'correct-hl':'wrong-hl');
+    }
+    if(i===mcqCorrectDir&&!isCorrect){
+      el.classList.add('correct-hl');
+    }
+    if(i!==swipeDirIdx&&i!==mcqCorrectDir){
+      el.style.opacity='0.3';
+    }
   });
-  // Auto-grade: correct=Good, wrong=Again
-  gradeCard(w.id,isCorrect?2:0);
+  // Feedback
+  const fb=document.getElementById('mcq-feedback');
+  fb.textContent=isCorrect?'✓':'✗';
+  fb.style.color=isCorrect?'var(--green)':'var(--red)';
+  fb.style.opacity='1';
+  // Grade
+  gradeCard(mcqWord.id,isCorrect?2:0);
   recordReview();
   sessionReviewed++;
   if(isCorrect)sessionCorrect++;
-  if(!isCorrect){currentQueue.push(w)}
-  document.getElementById('mcq-next').style.display='block';
-  document.getElementById('mcq-next').textContent=queueIndex+1>=currentQueue.length?'Finish':'Continue';
+  if(!isCorrect){currentQueue.push(mcqWord)}
+  setTimeout(()=>{
+    fb.style.opacity='0';
+    queueIndex++;
+    showCard();
+  },900);
 }
-function mcqNext(){
-  queueIndex++;
-  showCard();
-}
-function flipCard(){
-  if(currentMode!=='flip')return;
-  const card=document.getElementById('flashcard');
-  card.classList.toggle('flipped');
-  if(card.classList.contains('flipped'))document.getElementById('grade-btns').style.display='grid';
-}
-function grade(quality){
-  const w=currentQueue[queueIndex];
-  gradeCard(w.id,quality);
-  recordReview();
-  sessionReviewed++;
-  if(quality>=2)sessionCorrect++;
-  if(isLearning?quality<2:quality===0){currentQueue.push(w)}
-  queueIndex++;
-  showCard();
-}
+
+// MCQ swipe handlers
+(function(){
+  const area=document.getElementById('mcq-area');
+  const dirs=['up','down','left','right'];
+  let sx=0,sy=0,active=false;
+
+  function onStart(e){
+    if(mcqAnswered)return;
+    const t=e.touches?e.touches[0]:e;
+    sx=t.clientX;sy=t.clientY;active=true;
+  }
+  function onMove(e){
+    if(!active||mcqAnswered)return;
+    const t=e.touches?e.touches[0]:e;
+    const ddx=t.clientX-sx,ddy=t.clientY-sy;
+    const dist=Math.sqrt(ddx*ddx+ddy*ddy);
+    // Highlight dominant direction
+    dirs.forEach(d=>document.getElementById('mcq-'+d).classList.remove('highlight'));
+    if(dist>15){
+      const dom=getDominantDir(ddx,ddy);
+      document.getElementById('mcq-'+dirs[dom]).classList.add('highlight');
+    }
+    if(e.cancelable)e.preventDefault();
+  }
+  function onEnd(e){
+    if(!active||mcqAnswered)return;
+    active=false;
+    const t=e.changedTouches?e.changedTouches[0]:e;
+    const ddx=t.clientX-sx,ddy=t.clientY-sy;
+    const dist=Math.sqrt(ddx*ddx+ddy*ddy);
+    dirs.forEach(d=>document.getElementById('mcq-'+d).classList.remove('highlight'));
+    if(dist>swipeThreshold*0.6){
+      const dom=getDominantDir(ddx,ddy);
+      resolveMCQ(dom);
+    }
+  }
+  function getDominantDir(x,y){
+    // 0=up, 1=down, 2=left, 3=right
+    if(Math.abs(x)>Math.abs(y)){return x<0?2:3}
+    return y<0?0:1;
+  }
+  area.addEventListener('mousedown',onStart);
+  area.addEventListener('mousemove',onMove);
+  area.addEventListener('mouseup',onEnd);
+  area.addEventListener('mouseleave',()=>{if(active)active=false});
+  area.addEventListener('touchstart',onStart,{passive:true});
+  area.addEventListener('touchmove',onMove,{passive:false});
+  area.addEventListener('touchend',onEnd);
+})();
+
 function endReview(){
   const mins=Math.round((Date.now()-sessionStart)/60000);
   document.getElementById('cs-reviewed').textContent=sessionReviewed;
