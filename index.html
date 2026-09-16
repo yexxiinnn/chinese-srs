@@ -102,6 +102,20 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
 .forecast-row:last-child{border:none}
 .forecast-row .fr-day{color:var(--text2)}.forecast-row .fr-count{font-weight:600}
 
+/* ═══ MCQ ═══ */
+.mcq-container{display:none;margin-bottom:16px}
+.mcq-label{font-size:10px;color:var(--text3);text-align:center;margin-bottom:4px;letter-spacing:.3px;text-transform:uppercase}
+.mcq-char{font-size:48px;font-weight:700;text-align:center;margin-bottom:4px;line-height:1.2}
+.mcq-pinyin{font-size:14px;color:var(--text2);text-align:center;margin-bottom:16px}
+.mcq-options{display:flex;flex-direction:column;gap:6px}
+.mcq-opt{padding:14px 12px;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;text-align:left;cursor:default;transition:all .15s;color:var(--text);font-family:inherit;line-height:1.4}
+.mcq-opt:active{transform:scale(.98)}
+.mcq-opt.correct{border-color:var(--green);background:rgba(68,170,68,.12);color:var(--green)}
+.mcq-opt.wrong{border-color:var(--red);background:rgba(170,68,68,.1);color:var(--red);text-decoration:line-through;opacity:.7}
+.mcq-opt.reveal{border-color:var(--green);opacity:1}
+.mcq-opt.disabled{pointer-events:none;opacity:.5}
+.mcq-next{width:100%;padding:12px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:default;margin-top:8px;font-family:inherit;background:var(--text);color:var(--bg);display:none}
+
 /* ═══ COMPLETE ═══ */
 .complete{text-align:center;padding:40px 20px}
 .complete h2{font-size:20px;margin-bottom:6px}
@@ -147,7 +161,7 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
     <div class="review-progress"><div class="rp-fill" id="rp-fill"></div></div>
     <span class="review-count" id="review-count">0/0</span>
   </div>
-  <div class="card-container" onclick="flipCard()">
+  <div class="card-container" id="card-container" onclick="flipCard()">
     <div class="card" id="flashcard">
       <div class="card-face card-front">
         <div class="card-char" id="cf-char"></div>
@@ -168,6 +182,13 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
     <button class="grade-btn hard" onclick="grade(1)">Hard<span class="gb-interval" id="gi-hard">6m</span></button>
     <button class="grade-btn good" onclick="grade(2)">Good<span class="gb-interval" id="gi-good">10m</span></button>
     <button class="grade-btn easy" onclick="grade(3)">Easy<span class="gb-interval" id="gi-easy">4d</span></button>
+  </div>
+  <div class="mcq-container" id="mcq-container">
+    <div class="mcq-label">What does this mean?</div>
+    <div class="mcq-char" id="mcq-char"></div>
+    <div class="mcq-pinyin" id="mcq-pinyin"></div>
+    <div class="mcq-options" id="mcq-options"></div>
+    <button class="mcq-next" id="mcq-next" onclick="mcqNext()">Continue</button>
   </div>
 </div>
 
@@ -1133,6 +1154,7 @@ function getHSKProgress(){
 // UI
 // ═══════════════════════════════════════
 let currentQueue=[],queueIndex=0,sessionReviewed=0,sessionCorrect=0,sessionStart=0;
+let currentMode='flip',mcqAnswered=false;
 
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1187,6 +1209,22 @@ function startNew(){
 function showCard(){
   if(queueIndex>=currentQueue.length){endReview();return}
   const w=currentQueue[queueIndex];
+  const total=currentQueue.length;
+  document.getElementById('review-count').textContent=(queueIndex+1)+'/'+total;
+  document.getElementById('rp-fill').style.width=((queueIndex)/total*100)+'%';
+  // Decide mode: MCQ if enough distractors exist, else flip
+  const distractors=getDistractors(w,3);
+  if(distractors.length>=3&&Math.random()<0.5){
+    currentMode='mcq';
+    showMCQ(w,distractors);
+  } else {
+    currentMode='flip';
+    showFlip(w);
+  }
+}
+function showFlip(w){
+  document.getElementById('card-container').style.display='block';
+  document.getElementById('mcq-container').style.display='none';
   document.getElementById('cf-char').textContent=w.char;
   document.getElementById('cf-pinyin').textContent=w.pinyin;
   document.getElementById('cf-hsk').textContent='HSK '+w.hsk;
@@ -1196,9 +1234,6 @@ function showCard(){
   document.getElementById('cb-example').textContent=w.example||'';
   document.getElementById('flashcard').classList.remove('flipped');
   document.getElementById('grade-btns').style.display='none';
-  const total=currentQueue.length;
-  document.getElementById('review-count').textContent=(queueIndex+1)+'/'+total;
-  document.getElementById('rp-fill').style.width=((queueIndex)/total*100)+'%';
   const s=getCardState(w.id);
   const base=INTERVALS[Math.min(s.stage,INTERVALS.length-1)];
   document.getElementById('gi-again').textContent=formatInterval(INTERVALS[0]);
@@ -1206,7 +1241,68 @@ function showCard(){
   document.getElementById('gi-good').textContent=formatInterval(INTERVALS[Math.min(s.stage+1,INTERVALS.length-1)]);
   document.getElementById('gi-easy').textContent=formatInterval(INTERVALS[Math.min(s.stage+2,INTERVALS.length-1)]*1.5);
 }
+function getDistractors(w,count){
+  // Prefer same HSK level, fallback to nearby
+  const pool=allWords.filter(x=>x.id!==w.id&&x.meaning!==w.meaning);
+  const sameHsk=pool.filter(x=>x.hsk===w.hsk);
+  const nearHsk=pool.filter(x=>Math.abs(x.hsk-w.hsk)<=1);
+  const source=sameHsk.length>=count?sameHsk:nearHsk.length>=count?nearHsk:pool;
+  // Shuffle and pick
+  const shuffled=source.sort(()=>Math.random()-.5);
+  // Deduplicate by meaning
+  const seen=new Set([w.meaning]);
+  const result=[];
+  for(const x of shuffled){
+    if(!seen.has(x.meaning)){seen.add(x.meaning);result.push(x);if(result.length>=count)break}
+  }
+  return result;
+}
+function showMCQ(w,distractors){
+  mcqAnswered=false;
+  document.getElementById('card-container').style.display='none';
+  document.getElementById('grade-btns').style.display='none';
+  document.getElementById('mcq-container').style.display='block';
+  document.getElementById('mcq-char').textContent=w.char;
+  document.getElementById('mcq-pinyin').textContent=w.pinyin;
+  document.getElementById('mcq-next').style.display='none';
+  // Build options: correct + distractors, shuffled
+  const options=[{meaning:w.meaning,correct:true},...distractors.map(d=>({meaning:d.meaning,correct:false}))];
+  options.sort(()=>Math.random()-.5);
+  const container=document.getElementById('mcq-options');
+  container.innerHTML='';
+  options.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='mcq-opt';
+    btn.textContent=opt.meaning;
+    btn.onclick=()=>selectMCQ(btn,opt.correct,w);
+    container.appendChild(btn);
+  });
+}
+function selectMCQ(btn,isCorrect,w){
+  if(mcqAnswered)return;
+  mcqAnswered=true;
+  const opts=document.querySelectorAll('.mcq-opt');
+  opts.forEach(o=>{
+    o.classList.add('disabled');
+    if(o===btn){o.classList.add(isCorrect?'correct':'wrong')}
+    // Reveal correct answer
+    if(!isCorrect&&o.textContent===w.meaning)o.classList.add('reveal');
+  });
+  // Auto-grade: correct=Good, wrong=Again
+  gradeCard(w.id,isCorrect?2:0);
+  recordReview();
+  sessionReviewed++;
+  if(isCorrect)sessionCorrect++;
+  if(!isCorrect){currentQueue.push(w)}
+  document.getElementById('mcq-next').style.display='block';
+  document.getElementById('mcq-next').textContent=queueIndex+1>=currentQueue.length?'Finish':'Continue';
+}
+function mcqNext(){
+  queueIndex++;
+  showCard();
+}
 function flipCard(){
+  if(currentMode!=='flip')return;
   const card=document.getElementById('flashcard');
   card.classList.toggle('flipped');
   if(card.classList.contains('flipped'))document.getElementById('grade-btns').style.display='grid';
