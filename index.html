@@ -53,11 +53,13 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
 .review-close{font-size:18px;color:var(--text3);padding:4px 8px;cursor:default}
 
 /* ═══ SWIPE AREA ═══ */
-.swipe-area{position:relative;width:100%;height:300px;overflow:hidden;border-radius:10px;touch-action:none;user-select:none;-webkit-user-select:none}
-.swipe-card{position:absolute;inset:0;border-radius:10px;border:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;cursor:grab;will-change:transform;transition:none;z-index:2}
-.swipe-card.dragging{cursor:grabbing;transition:none}
-.swipe-card.flying{transition:transform .35s cubic-bezier(.2,.8,.3,1),opacity .35s;opacity:0}
-.swipe-card.entering{transition:transform .3s cubic-bezier(.2,.8,.3,1),opacity .3s;opacity:1;transform:translate(0,0) rotate(0)}
+.swipe-area{position:relative;width:100%;height:320px;overflow:visible;touch-action:none;user-select:none;-webkit-user-select:none}
+.swipe-card-next{position:absolute;inset:6px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);z-index:1;opacity:.5;transform:scale(.97)}
+.swipe-card{position:absolute;inset:0;border-radius:10px;border:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;cursor:grab;z-index:2;box-shadow:0 4px 20px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);transition:box-shadow .15s,transform .01s}
+.swipe-card.dragging{cursor:grabbing;box-shadow:0 12px 40px rgba(0,0,0,.5),0 4px 12px rgba(0,0,0,.3)}
+.swipe-card.flying{opacity:0;pointer-events:none}
+.swipe-card.entering{opacity:1}
+.swipe-card.pressed{transform:scale(.98)}
 .sc-char{font-size:48px;font-weight:700;line-height:1.2;margin-bottom:6px;pointer-events:none}
 .sc-pinyin{font-size:15px;color:var(--text2);margin-bottom:4px;pointer-events:none}
 .sc-hsk{font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 5px;border-radius:2px;margin-top:6px;pointer-events:none}
@@ -65,16 +67,20 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
 .sc-example{font-size:11px;color:var(--text2);text-align:center;line-height:1.6;max-width:280px;pointer-events:none}
 .sc-divider{width:40px;height:1px;background:var(--border);margin:10px 0;pointer-events:none}
 .sc-hint{font-size:10px;color:var(--text3);margin-top:10px;pointer-events:none}
-/* Back face (hidden initially) */
 .swipe-card .sc-back{display:none;flex-direction:column;align-items:center}
 .swipe-card.revealed .sc-front{display:none}
 .swipe-card.revealed .sc-back{display:flex}
 
-/* Swipe indicators */
-.swipe-ind{position:absolute;top:20px;padding:6px 16px;border-radius:4px;font-size:13px;font-weight:700;opacity:0;transition:opacity .1s;pointer-events:none;z-index:5}
-.swipe-ind.ind-right{right:16px;border:2px solid var(--green);color:var(--green)}
-.swipe-ind.ind-left{left:16px;border:2px solid var(--red);color:var(--red)}
-/* Direction hints at bottom */
+/* Swipe indicators - glow badges */
+.swipe-ind{position:absolute;top:24px;padding:8px 18px;border-radius:6px;font-size:14px;font-weight:800;letter-spacing:1px;opacity:0;pointer-events:none;z-index:5;transition:none}
+.swipe-ind.ind-right{right:20px;border:3px solid var(--green);color:var(--green);text-shadow:0 0 12px rgba(68,170,68,.5);box-shadow:0 0 20px rgba(68,170,68,.15);transform:rotate(15deg)}
+.swipe-ind.ind-left{left:20px;border:3px solid var(--red);color:var(--red);text-shadow:0 0 12px rgba(170,68,68,.5);box-shadow:0 0 20px rgba(170,68,68,.15);transform:rotate(-15deg)}
+/* Edge glow */
+.swipe-area::before,.swipe-area::after{content:'';position:absolute;top:0;bottom:0;width:60px;opacity:0;transition:opacity .15s;pointer-events:none;z-index:0;border-radius:10px}
+.swipe-area::before{left:0;background:linear-gradient(to right,rgba(170,68,68,.12),transparent)}
+.swipe-area::after{right:0;background:linear-gradient(to left,rgba(68,170,68,.12),transparent)}
+.swipe-area.glow-left::before{opacity:1}
+.swipe-area.glow-right::after{opacity:1}
 .swipe-hints{display:flex;justify-content:space-between;padding:8px 4px 0;font-size:10px;color:var(--text3)}
 
 /* ═══ MCQ SWIPE ═══ */
@@ -82,15 +88,20 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
 .mcq-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:2;pointer-events:none}
 .mcq-center .mc-char{font-size:44px;font-weight:700;line-height:1.2}
 .mcq-center .mc-pinyin{font-size:14px;color:var(--text2);margin-top:2px}
-.mcq-dir{position:absolute;display:flex;align-items:center;justify-content:center;width:calc(100% - 16px);padding:10px;font-size:12px;font-weight:500;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:8px;transition:all .2s;z-index:1;pointer-events:none;line-height:1.4;text-align:center}
-.mcq-dir.dir-up{top:4px;left:8px}
-.mcq-dir.dir-down{bottom:4px;left:8px}
-.mcq-dir.dir-left{top:50%;left:8px;transform:translateY(-50%);width:auto;padding:10px 14px}
-.mcq-dir.dir-right{top:50%;right:8px;transform:translateY(-50%);width:auto;padding:10px 14px;left:auto}
-.mcq-dir.highlight{border-color:var(--text);color:var(--text);background:var(--bg3)}
-.mcq-dir.correct-hl{border-color:var(--green);color:var(--green);background:rgba(68,170,68,.1)}
-.mcq-dir.wrong-hl{border-color:var(--red);color:var(--red);background:rgba(170,68,68,.08)}
-.mcq-feedback{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;font-weight:800;z-index:10;pointer-events:none;opacity:0;transition:opacity .3s}
+.mcq-dir{position:absolute;display:flex;align-items:center;justify-content:center;width:calc(100% - 16px);padding:12px;font-size:12px;font-weight:500;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:10px;z-index:1;pointer-events:none;line-height:1.4;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:transform .25s cubic-bezier(.34,1.56,.64,1),border-color .2s,color .2s,background .2s,opacity .2s,box-shadow .2s}
+.mcq-dir.dir-up{top:6px;left:8px}
+.mcq-dir.dir-down{bottom:6px;left:8px}
+.mcq-dir.dir-left{top:50%;left:8px;transform:translateY(-50%);width:auto;padding:12px 16px}
+.mcq-dir.dir-right{top:50%;right:8px;transform:translateY(-50%);width:auto;padding:12px 16px;left:auto}
+.mcq-dir.highlight{border-color:var(--text);color:var(--text);background:var(--bg3);box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.mcq-dir.dir-up.highlight{transform:translateY(-3px)}
+.mcq-dir.dir-down.highlight{transform:translateY(3px)}
+.mcq-dir.dir-left.highlight{transform:translateY(-50%) translateX(-3px)}
+.mcq-dir.dir-right.highlight{transform:translateY(-50%) translateX(3px)}
+.mcq-dir.correct-hl{border-color:var(--green)!important;color:var(--green)!important;background:rgba(68,170,68,.1)!important;box-shadow:0 0 20px rgba(68,170,68,.2)}
+.mcq-dir.wrong-hl{border-color:var(--red)!important;color:var(--red)!important;background:rgba(170,68,68,.08)!important;box-shadow:0 0 20px rgba(170,68,68,.15)}
+.mcq-feedback{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.5);font-size:42px;font-weight:900;z-index:10;pointer-events:none;opacity:0;transition:opacity .2s,transform .35s cubic-bezier(.34,1.56,.64,1)}
+.mcq-feedback.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 
 /* ═══ BROWSE ═══ */
 .browse-search{width:100%;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:5px;font-size:13px;color:var(--text);outline:none;margin-bottom:10px;font-family:inherit}
@@ -168,6 +179,7 @@ body{font-family:-apple-system,"SF Pro Text","Helvetica Neue","PingFang SC",sans
 
   <!-- Flashcard swipe mode -->
   <div class="swipe-area" id="swipe-area">
+    <div class="swipe-card-next" id="swipe-next"></div>
     <div class="swipe-ind ind-right" id="ind-right">KNOW</div>
     <div class="swipe-ind ind-left" id="ind-left">NOPE</div>
     <div class="swipe-card" id="swipe-card">
@@ -1250,7 +1262,7 @@ function showFlipCard(w){
   document.getElementById('swipe-hints').style.display='flex';
   document.getElementById('mcq-area').style.display='none';
   const card=document.getElementById('swipe-card');
-  card.classList.remove('revealed','flying','entering','dragging');
+  card.classList.remove('revealed','flying','entering','dragging','pressed');
   card.style.transform='';card.style.opacity='1';
   document.getElementById('sf-char').textContent=w.char;
   document.getElementById('sf-pinyin').textContent=w.pinyin;
@@ -1261,6 +1273,13 @@ function showFlipCard(w){
   document.getElementById('sb-example').textContent=w.example||'';
   document.getElementById('ind-right').style.opacity='0';
   document.getElementById('ind-left').style.opacity='0';
+  document.getElementById('swipe-area').classList.remove('glow-left','glow-right');
+  // Next card peek
+  const next=document.getElementById('swipe-next');
+  if(queueIndex+1<currentQueue.length){
+    next.style.display='block';
+    next.innerHTML='<div style="font-size:32px;font-weight:700;color:var(--text3);pointer-events:none">'+currentQueue[queueIndex+1].char+'</div>';
+  } else {next.style.display='none'}
 }
 
 function flipCard(){
@@ -1271,82 +1290,156 @@ function flipCard(){
 }
 
 function flyCard(dir){
-  // dir: 'left' or 'right'
   const card=document.getElementById('swipe-card');
+  const area=document.getElementById('swipe-area');
   const w=currentQueue[queueIndex];
-  const x=dir==='right'?500:-500;
-  const rot=dir==='right'?25:-25;
+  const x=dir==='right'?window.innerWidth:-window.innerWidth;
+  const rot=dir==='right'?30:-30;
+  haptic('medium');
   card.classList.add('flying');
-  card.style.transform='translate('+x+'px,0) rotate('+rot+'deg)';
-  // Grade: right=Know(2), left=Don't know(0)
-  const quality=dir==='right'?2:0;
-  gradeCard(w.id,quality);
-  recordReview();
-  sessionReviewed++;
-  if(quality>=2)sessionCorrect++;
-  if(isLearning?quality<2:quality===0){currentQueue.push(w)}
-  setTimeout(()=>{
-    queueIndex++;
-    showCard();
-  },350);
+  // Use rAF for smooth GPU animation
+  const start=performance.now();
+  const fromX=dx,fromR=dx*0.08;
+  const dur=320;
+  function anim(now){
+    const t=Math.min((now-start)/dur,1);
+    // Ease out expo
+    const e=1-Math.pow(1-t,3);
+    const cx=fromX+(x-fromX)*e;
+    const cr=fromR+(rot-fromR)*e;
+    card.style.transform='translate('+cx+'px,'+(dy*0.3*(1-t))+'px) rotate('+cr+'deg) scale('+(1-t*0.05)+')';
+    card.style.opacity=1-t;
+    if(t<1){requestAnimationFrame(anim)}
+    else{
+      card.classList.remove('flying');
+      area.classList.remove('glow-left','glow-right');
+      const quality=dir==='right'?2:0;
+      gradeCard(w.id,quality);recordReview();sessionReviewed++;
+      if(quality>=2)sessionCorrect++;
+      if(isLearning?quality<2:quality===0){currentQueue.push(w)}
+      queueIndex++;showCard();
+    }
+  }
+  requestAnimationFrame(anim);
 }
 
-// Swipe event handlers for flashcard
+// Haptic feedback
+function haptic(style){
+  try{
+    if(navigator.vibrate){
+      if(style==='light')navigator.vibrate(5);
+      else if(style==='medium')navigator.vibrate([8,12,5]);
+      else navigator.vibrate([12,16,8,12,5]);
+    }
+  }catch(e){}
+}
+
+// Flashcard swipe event handlers
 (function(){
   const area=document.getElementById('swipe-area');
   const card=document.getElementById('swipe-card');
   const indR=document.getElementById('ind-right');
   const indL=document.getElementById('ind-left');
-  let tapTimer=0;
+  let tapTimer=0,lastX=0,lastTime=0,velX=0,pressed=false;
 
   function onStart(e){
     if(card.classList.contains('flying'))return;
     const t=e.touches?e.touches[0]:e;
     swiping=true;startX=t.clientX;startY=t.clientY;dx=0;dy=0;
+    lastX=startX;lastTime=performance.now();velX=0;
     tapTimer=Date.now();
     card.classList.remove('entering');
-    card.classList.add('dragging');
-    card.style.transition='none';
+    card.classList.add('dragging','pressed');
+    pressed=true;
+    haptic('light');
   }
   function onMove(e){
     if(!swiping)return;
     const t=e.touches?e.touches[0]:e;
+    const now=performance.now();
     dx=t.clientX-startX;dy=t.clientY-startY;
-    const rot=dx*0.08;
-    card.style.transform='translate('+dx+'px,'+dy*0.3+'px) rotate('+rot+'deg)';
-    // Show indicators
-    const pct=Math.min(Math.abs(dx)/swipeThreshold,1);
-    if(dx>0){indR.style.opacity=pct;indL.style.opacity=0}
-    else{indL.style.opacity=pct;indR.style.opacity=0}
+    // Track velocity
+    if(now-lastTime>0)velX=(t.clientX-lastX)/(now-lastTime);
+    lastX=t.clientX;lastTime=now;
+    // Rubber band: dampen past threshold
+    const absDx=Math.abs(dx);
+    const dampen=absDx>swipeThreshold?0.4:1;
+    const effDx=absDx>swipeThreshold?swipeThreshold+(absDx-swipeThreshold)*dampen:absDx;
+    const sign=dx>=0?1:-1;
+    const finalDx=effDx*sign;
+    const rot=finalDx*0.1;
+    card.style.transform='translate('+finalDx+'px,'+(dy*0.15)+'px) rotate('+rot+'deg) scale(.98)';
+    // Indicators with smooth opacity
+    const pct=Math.min(absDx/swipeThreshold,1);
+    const eased=pct*pct; // quadratic ease
+    if(dx>0){
+      indR.style.opacity=eased;indR.style.transform='rotate(15deg) scale('+(0.8+eased*0.2)+')';
+      indL.style.opacity=0;
+      area.classList.toggle('glow-right',pct>0.3);
+      area.classList.remove('glow-left');
+    } else {
+      indL.style.opacity=eased;indL.style.transform='rotate(-15deg) scale('+(0.8+eased*0.2)+')';
+      indR.style.opacity=0;
+      area.classList.toggle('glow-left',pct>0.3);
+      area.classList.remove('glow-right');
+    }
+    // Haptic at threshold crossing
+    if(absDx>=swipeThreshold&&absDx-Math.abs(dx-e.deltaX||0)<swipeThreshold+5){
+      haptic('medium');
+    }
     if(e.cancelable)e.preventDefault();
   }
   function onEnd(){
     if(!swiping)return;
     swiping=false;
-    card.classList.remove('dragging');
-    // Check if swipe or tap
+    card.classList.remove('dragging','pressed');
     const elapsed=Date.now()-tapTimer;
-    if(Math.abs(dx)<15&&Math.abs(dy)<15&&elapsed<300){
-      // It's a tap - flip
+    // Tap detection
+    if(Math.abs(dx)<12&&Math.abs(dy)<12&&elapsed<250){
       card.style.transform='';card.style.transition='';
+      haptic('light');
       flipCard();
       return;
     }
-    if(dx>swipeThreshold){
+    // Flick detection: velocity > 0.8 px/ms or distance > threshold
+    const isFlick=Math.abs(velX)>0.8;
+    if(dx>swipeThreshold||isFlick&&dx>30){
       flyCard('right');
-    } else if(dx<-swipeThreshold){
+    } else if(dx<-swipeThreshold||isFlick&&dx<-30){
       flyCard('left');
     } else {
-      // Snap back
-      card.classList.add('entering');
-      card.style.transform='translate(0,0) rotate(0)';
-      indR.style.opacity='0';indL.style.opacity='0';
+      // Spring-back with overshoot
+      springBack();
+      haptic('light');
     }
   }
+  function springBack(){
+    const fromX=dx,fromY=dy*0.15,fromR=dx*0.1;
+    const start=performance.now();
+    const dur=400;
+    function anim(now){
+      const t=Math.min((now-start)/dur,1);
+      // Spring: overshoot then settle
+      const spring=1-Math.pow(1-t,3)*Math.cos(t*Math.PI*1.2);
+      const cx=fromX*(1-spring);
+      const cy=fromY*(1-spring);
+      const cr=fromR*(1-spring);
+      const sc=0.98+0.02*spring;
+      card.style.transform='translate('+cx+'px,'+cy+'px) rotate('+cr+'deg) scale('+sc+')';
+      indR.style.opacity=Math.max(0,indR.style.opacity-0.08);
+      indL.style.opacity=Math.max(0,indL.style.opacity-0.08);
+      if(t<1){requestAnimationFrame(anim)}
+      else{
+        card.style.transform='translate(0,0) rotate(0) scale(1)';
+        indR.style.opacity=0;indL.style.opacity=0;
+        area.classList.remove('glow-left','glow-right');
+      }
+    }
+    requestAnimationFrame(anim);
+  }
   area.addEventListener('mousedown',onStart);
-  area.addEventListener('mousemove',onMove);
-  area.addEventListener('mouseup',onEnd);
-  area.addEventListener('mouseleave',()=>{if(swiping)onEnd()});
+  window.addEventListener('mousemove',onMove);
+  window.addEventListener('mouseup',onEnd);
   area.addEventListener('touchstart',onStart,{passive:true});
   area.addEventListener('touchmove',onMove,{passive:false});
   area.addEventListener('touchend',onEnd);
@@ -1395,57 +1488,51 @@ function resolveMCQ(swipeDirIdx){
   if(mcqAnswered)return;
   mcqAnswered=true;
   const isCorrect=swipeDirIdx===mcqCorrectDir;
+  haptic(isCorrect?'light':'heavy');
   const dirs=['up','down','left','right'];
-  // Highlight selected + reveal correct
   dirs.forEach((d,i)=>{
     const el=document.getElementById('mcq-'+d);
-    if(i===swipeDirIdx){
-      el.classList.add(isCorrect?'correct-hl':'wrong-hl');
-    }
-    if(i===mcqCorrectDir&&!isCorrect){
-      el.classList.add('correct-hl');
-    }
-    if(i!==swipeDirIdx&&i!==mcqCorrectDir){
-      el.style.opacity='0.3';
-    }
+    if(i===swipeDirIdx){el.classList.add(isCorrect?'correct-hl':'wrong-hl')}
+    if(i===mcqCorrectDir&&!isCorrect){el.classList.add('correct-hl')}
+    if(i!==swipeDirIdx&&i!==mcqCorrectDir){el.style.opacity='0.2'}
   });
-  // Feedback
   const fb=document.getElementById('mcq-feedback');
   fb.textContent=isCorrect?'✓':'✗';
   fb.style.color=isCorrect?'var(--green)':'var(--red)';
-  fb.style.opacity='1';
-  // Grade
+  fb.classList.add('show');
   gradeCard(mcqWord.id,isCorrect?2:0);
-  recordReview();
-  sessionReviewed++;
+  recordReview();sessionReviewed++;
   if(isCorrect)sessionCorrect++;
   if(!isCorrect){currentQueue.push(mcqWord)}
   setTimeout(()=>{
-    fb.style.opacity='0';
-    queueIndex++;
-    showCard();
-  },900);
+    fb.classList.remove('show');
+    queueIndex++;showCard();
+  },850);
 }
 
-// MCQ swipe handlers
+// MCQ swipe handlers - enhanced
 (function(){
   const area=document.getElementById('mcq-area');
   const dirs=['up','down','left','right'];
-  let sx=0,sy=0,active=false;
+  let sx=0,sy=0,active=false,lastX=0,lastY=0,lastTime=0,velX=0,velY=0;
 
   function onStart(e){
     if(mcqAnswered)return;
     const t=e.touches?e.touches[0]:e;
-    sx=t.clientX;sy=t.clientY;active=true;
+    sx=t.clientX;sy=t.clientY;lastX=sx;lastY=sy;
+    lastTime=performance.now();velX=0;velY=0;active=true;
+    haptic('light');
   }
   function onMove(e){
     if(!active||mcqAnswered)return;
     const t=e.touches?e.touches[0]:e;
     const ddx=t.clientX-sx,ddy=t.clientY-sy;
     const dist=Math.sqrt(ddx*ddx+ddy*ddy);
-    // Highlight dominant direction
+    const now=performance.now();
+    if(now-lastTime>0){velX=(t.clientX-lastX)/(now-lastTime);velY=(t.clientY-lastY)/(now-lastTime)}
+    lastX=t.clientX;lastY=t.clientY;lastTime=now;
     dirs.forEach(d=>document.getElementById('mcq-'+d).classList.remove('highlight'));
-    if(dist>15){
+    if(dist>12){
       const dom=getDominantDir(ddx,ddy);
       document.getElementById('mcq-'+dirs[dom]).classList.add('highlight');
     }
@@ -1457,21 +1544,21 @@ function resolveMCQ(swipeDirIdx){
     const t=e.changedTouches?e.changedTouches[0]:e;
     const ddx=t.clientX-sx,ddy=t.clientY-sy;
     const dist=Math.sqrt(ddx*ddx+ddy*ddy);
+    const vel=Math.sqrt(velX*velX+velY*velY);
     dirs.forEach(d=>document.getElementById('mcq-'+d).classList.remove('highlight'));
-    if(dist>swipeThreshold*0.6){
+    // Allow shorter swipe if velocity is high (flick)
+    if(dist>swipeThreshold*0.5||vel>0.6&&dist>25){
       const dom=getDominantDir(ddx,ddy);
       resolveMCQ(dom);
     }
   }
   function getDominantDir(x,y){
-    // 0=up, 1=down, 2=left, 3=right
     if(Math.abs(x)>Math.abs(y)){return x<0?2:3}
     return y<0?0:1;
   }
   area.addEventListener('mousedown',onStart);
-  area.addEventListener('mousemove',onMove);
-  area.addEventListener('mouseup',onEnd);
-  area.addEventListener('mouseleave',()=>{if(active)active=false});
+  window.addEventListener('mousemove',onMove);
+  window.addEventListener('mouseup',onEnd);
   area.addEventListener('touchstart',onStart,{passive:true});
   area.addEventListener('touchmove',onMove,{passive:false});
   area.addEventListener('touchend',onEnd);
