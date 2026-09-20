@@ -47,11 +47,13 @@ body{font-family:-apple-system,"SF Pro Display","SF Pro Text","Helvetica Neue","
 .swipe-card.dragging{cursor:grabbing}
 .swipe-card.flying{opacity:0;pointer-events:none}
 .swipe-card.entering{opacity:1}
-.sc-front,.sc-back{position:absolute;inset:0;border-radius:var(--radius);background:var(--bg2s);backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass);border:1px solid rgba(255,255,255,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;box-shadow:var(--shadow2);backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .4s cubic-bezier(.4,0,.2,1)}
-.sc-front{transform:rotateY(0deg)}
-.sc-back{transform:rotateY(180deg)}
+.sc-front,.sc-back{position:absolute;inset:0;border-radius:var(--radius);background:var(--bg2s);backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass);border:1px solid rgba(255,255,255,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;box-shadow:var(--shadow2);backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .35s cubic-bezier(.22,.61,.36,1);will-change:transform}
+.sc-front{transform:rotateY(0deg) translateZ(1px)}
+.sc-back{transform:rotateY(180deg) translateZ(1px)}
 .swipe-card.revealed .sc-front{transform:rotateY(180deg)}
 .swipe-card.revealed .sc-back{transform:rotateY(0deg)}
+.swipe-card.flip-left .sc-front{transform:rotateY(-180deg)}
+.swipe-card.flip-left .sc-back{transform:rotateY(0deg)}
 .swipe-card.dragging .sc-front,.swipe-card.dragging .sc-back{box-shadow:0 20px 60px rgba(0,0,0,.15),0 8px 20px rgba(0,0,0,.1)}
 .sc-char{font-size:60px;font-weight:700;line-height:1.2;margin-bottom:8px;pointer-events:none;color:var(--text);letter-spacing:-.02em}
 .sc-pinyin{font-size:16px;color:var(--text2);margin-bottom:4px;pointer-events:none;font-weight:400;letter-spacing:.03em}
@@ -1150,8 +1152,8 @@ function showCard(){
   if(session.idx>=session.queue.length){endSession();return;}
   const w=session.queue[session.idx];
   const card=document.getElementById('swipe-card');
-  card.style.transform='';card.style.opacity='';
-  card.classList.remove('flying','entering','dragging','revealed');
+  card.style.transform='';card.style.opacity='';card.style.transformOrigin='';
+  card.classList.remove('flying','entering','dragging','revealed','flip-left');
   // Populate flashcard
   document.getElementById('sf-char').textContent=w.char;
   document.getElementById('sf-pinyin').textContent=w.pinyin;
@@ -1370,13 +1372,15 @@ function handleFailure(){
     const w=session.queue[session.idx];if(!w)return;
     const stage=session.learnStages.get(w.id)||0;
     if(stage!==0)return;
-    if(card.classList.contains('revealed')){
-      card.classList.remove('revealed');return;
+    if(card.classList.contains('revealed')||card.classList.contains('flip-left')){
+      card.classList.remove('revealed','flip-left');
+      card.style.transformOrigin='';return;
     }
     const p=e.touches?e.touches[0]:e;
     sx=p.clientX;sy=p.clientY;dx=0;dy=0;dragging=true;
     card.classList.add('dragging');
     card.style.transition='none';
+    card.style.transformOrigin='';
   }
 
   function onMove(e){
@@ -1384,7 +1388,15 @@ function handleFailure(){
     const p=e.touches?e.touches[0]:e;
     dx=p.clientX-sx;dy=p.clientY-sy;
     const rot=dx*0.08;
-    card.style.transform=`translate(${dx}px,${dy}px) rotate(${rot}deg)`;
+    if(dx<0){
+      // Left drag: integrate page-turn flip rotation
+      const flipAngle=Math.min(Math.abs(dx)/180*100,100);
+      card.style.transformOrigin='right center';
+      card.style.transform=`translate(${dx}px,${dy}px) rotate(${rot}deg) rotateY(${-flipAngle}deg)`;
+    }else{
+      card.style.transformOrigin='';
+      card.style.transform=`translate(${dx}px,${dy}px) rotate(${rot}deg)`;
+    }
     const t=Math.min(Math.abs(dx)/100,1);
     if(dx>0){
       indR.style.opacity=t;indL.style.opacity=0;
@@ -1405,9 +1417,11 @@ function handleFailure(){
       if(dx>0)resolveSwipe('right');
       else resolveSwipe('left');
     }else{
+      // Spring back: reset flip rotation smoothly
       card.style.transition='transform .35s cubic-bezier(.34,1.56,.64,1)';
+      card.style.transformOrigin='';
       card.style.transform='';
-      setTimeout(()=>card.style.transition='',350);
+      setTimeout(()=>{card.style.transition='none';card.style.transformOrigin='';},360);
     }
   }
 
@@ -1425,7 +1439,7 @@ function handleFailure(){
       dragging=false;card.classList.remove('dragging');
       area.classList.remove('glow-left','glow-right');
       indR.style.opacity=0;indL.style.opacity=0;
-      card.style.transition='';card.style.transform='';
+      card.style.transition='';card.style.transform='';card.style.transformOrigin='';
       card.classList.toggle('revealed');
       if(card.classList.contains('revealed'))speak(session.queue[session.idx]?.char||'');
       return;
@@ -1443,7 +1457,7 @@ function handleFailure(){
       dragging=false;card.classList.remove('dragging');
       area.classList.remove('glow-left','glow-right');
       indR.style.opacity=0;indL.style.opacity=0;
-      card.style.transition='';card.style.transform='';
+      card.style.transition='';card.style.transform='';card.style.transformOrigin='';
       card.classList.toggle('revealed');
       if(card.classList.contains('revealed'))speak(session.queue[session.idx]?.char||'');
       return;
@@ -1454,13 +1468,13 @@ function handleFailure(){
   function resolveSwipe(dir){
     const w=session.queue[session.idx];if(!w)return;
     haptic(10);
-    const xOff=dir==='right'?window.innerWidth:-window.innerWidth;
-    card.style.transition='transform .35s ease-in, opacity .35s';
-    card.style.transform=`translate(${xOff}px,0) rotate(${dir==='right'?20:-20}deg)`;
-    card.style.opacity='0';
-    card.classList.add('flying');
     if(dir==='right'){
-      // Know
+      // Know → fly right
+      card.style.transition='transform .35s ease-in, opacity .35s';
+      card.style.transformOrigin='';
+      card.style.transform=`translate(${window.innerWidth}px,0) rotate(20deg)`;
+      card.style.opacity='0';
+      card.classList.add('flying');
       session.correct++;session.total++;
       w.seen=true;
       w.ease=w.ease||2.5;
@@ -1472,12 +1486,16 @@ function handleFailure(){
       w.dueAt=Date.now()+intMs;
       session.learnStages.set(w.id,1);
       session.idx++;
-      setTimeout(()=>{card.style.transition='';showCard();},400);
+      setTimeout(()=>{card.style.transition='';card.style.transformOrigin='';showCard();},400);
     }else if(session.mode==='learn'){
-      // Don't know → teach mode (handles its own showCard)
+      // Don't know → flip-left teach mode
       teachAndRequeue(w);
     }else{
-      // Review mode: mark wrong, advance
+      // Review wrong → flip-left then advance
+      card.style.transition='transform .4s cubic-bezier(.22,.61,.36,1)';
+      card.style.transformOrigin='right center';
+      card.style.transform='translate(-60px,0) rotate(-8deg)';
+      card.classList.add('flip-left');
       w.ease=(w.ease||2.5)-0.2;
       if(w.ease<1.3)w.ease=1.3;
       w.lapses=(w.lapses||0)+1;
@@ -1486,45 +1504,54 @@ function handleFailure(){
       w.dueAt=Date.now()+INTERVALS[0];
       session.total++;
       session.idx++;
-      setTimeout(()=>{card.style.transition='';showCard();},400);
+      setTimeout(()=>{
+        card.style.transition='none';card.style.transform='';card.style.transformOrigin='';
+        card.style.opacity='';card.classList.remove('flip-left','flying');
+        setTimeout(()=>showCard(),30);
+      },700);
     }
   }
 
   function teachAndRequeue(w){
     session.teachLock=true;
-    // Fly card off left
-    card.style.transition='transform .3s ease-in, opacity .3s';
-    card.style.transform=`translate(-${window.innerWidth}px,0) rotate(-20deg)`;
-    card.style.opacity='0';
+    // Flip left like a page turn from current drag position
+    card.style.transition='transform .4s cubic-bezier(.22,.61,.36,1)';
+    card.style.transformOrigin='right center';
+    card.style.transform='translate(-60px,0) rotate(-8deg)';
+    card.classList.add('flip-left');
+    // Populate back content and speak
+    document.getElementById('sb-char').textContent=w.char;
+    document.getElementById('sb-pinyin').textContent=w.pinyin;
+    document.getElementById('sb-meaning').textContent=w.meaning;
+    document.getElementById('sb-example').textContent=w.example;
+    document.getElementById('sb-example-en').textContent=w.exampleEn||'';
+    setTimeout(()=>speak(w.char),200);
+    // After flip animation completes, hold for 3 seconds to teach
     setTimeout(()=>{
-      card.classList.remove('flying','dragging','revealed');
-      card.style.transition='';card.style.transform='';card.style.opacity='';
-      // Show back face immediately (teaching)
-      card.classList.add('revealed');
-      // Re-populate to be safe
-      document.getElementById('sb-char').textContent=w.char;
-      document.getElementById('sb-pinyin').textContent=w.pinyin;
-      document.getElementById('sb-meaning').textContent=w.meaning;
-      document.getElementById('sb-example').textContent=w.example;
-      document.getElementById('sb-example-en').textContent=w.exampleEn||'';
-      speak(w.char);
-      // After 3 seconds, un-flip and re-show as stage 0
+      // Card back is now fully visible — hold for study
       setTimeout(()=>{
-        card.classList.remove('revealed');
-        w.seen=true;
-        w.ease=w.ease||2.5;
-        w.lapses=(w.lapses||0)+1;
-        w.ease=Math.max((w.ease||2.5)-0.15,1.3);
-        w.interval=0;
-        w.lastReview=Date.now();
-        w.dueAt=Date.now()+INTERVALS[0];
-        session.learnStages.set(w.id,0);
-        session.total++;
-        session.teachLock=false;
-        session.idx++;
-        showCard();
+        // Fade out, reset, advance
+        card.style.transition='opacity .25s ease';
+        card.style.opacity='0';
+        setTimeout(()=>{
+          card.style.transition='none';
+          card.classList.remove('flip-left','flying','dragging','revealed');
+          card.style.transform='';card.style.transformOrigin='';card.style.opacity='';
+          w.seen=true;
+          w.ease=w.ease||2.5;
+          w.lapses=(w.lapses||0)+1;
+          w.ease=Math.max((w.ease||2.5)-0.15,1.3);
+          w.interval=0;
+          w.lastReview=Date.now();
+          w.dueAt=Date.now()+INTERVALS[0];
+          session.learnStages.set(w.id,0);
+          session.total++;
+          session.teachLock=false;
+          session.idx++;
+          showCard();
+        },260);
       },3000);
-    },350);
+    },420);
   }
 })();
 
